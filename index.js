@@ -111,7 +111,7 @@ async function initDay() {
     
     // 你可以修改下面的 str 来自定义每日说的内容和格式
     // PS: 如果需要插入 emoji(表情), 可访问 "https://getemoji.com/" 复制插入
-    let str = `${today}\n我们在一起的第${memorialDay}天\n\n元气满满的一天开始啦,要开心噢^_^\n\n今日天气\n${weather.weatherTips}\n${weather.todayWeather}\n每日一句:\n${one}\n\n每日土味情话：\n${sweetWord}\n\n————————最爱你的我`;
+    let str = `${today}\n我们在一起的第${memorialDay}天\n\n入冬了，小邓同学要注意防寒哦！\n\n元气满满的一天开始啦,今天也要开心噢^_^\n\n今日天气\n${weather.weatherTips}\n${weather.todayWeather}\n每日一句:\n${one}\n\n每日土味情话：\n${sweetWord}\n\n————————爱你的小何同学`;
     try {
       logMsg = str;
       await delay(2000);
