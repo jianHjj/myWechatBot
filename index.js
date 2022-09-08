@@ -99,15 +99,15 @@ async function initDay() {
 
   //设置定时任务
   config.tasks.forEach(task => {
-
+    console.log('已经设定定时任务！');
     schedule.setSchedule(task.date, async () => {
       console.log('定时任务开始工作啦！');
       let logMsg;
-      let contact = (await bot.Contact.find({name: task.nick})); // 获取你要发送的联系人
+      let contact = (await bot.Contact.find({alias: task.alias})); // 获取你要发送的联系人
 
       // 你可以修改下面的 str 来内容和格式
       // PS: 如果需要插入 emoji(表情), 可访问 "https://getemoji.com/" 复制插入
-      let str = task.msg;
+      let str = task.taskMsg;
       try {
         logMsg = str;
         await delay(2000);
