@@ -3,7 +3,7 @@
  *  - https://github.com/gengchen528/wechatBot
  */
 const {WechatyBuilder} = require('wechaty');
-const schedule = require('./schedule/index');
+const schedule = require('node-schedule');
 const config = require('./config/index');
 const untils = require('./utils/index');
 const superagent = require('./superagent/index');
@@ -12,7 +12,8 @@ const superagent = require('./superagent/index');
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // 二维码生成
-function onScan(qrcode, status) {
+// noinspection JSUnusedLocalSymbols
+async function onScan(qrcode, status) {
   require('qrcode-terminal').generate(qrcode); // 在console端显示二维码
   const qrcodeImageUrl = [
     'https://api.qrserver.com/v1/create-qr-code/?data=',
@@ -58,7 +59,7 @@ async function onMessage(msg) {
   } else if (isText) {
     // 如果非群消息 目前只处理文字消息
     console.log(`发消息人: ${alias} 消息内容: ${content}`);
-    if (content.substr(0, 1) == '?' || content.substr(0, 1) == '？') {
+    if (content.substr(0, 1) === '?' || content.substr(0, 1) === '？') {
       let contactContent = content.replace('?', '').replace('？', '');
       if (contactContent) {
         let res = await superagent.getRubbishType(contactContent);
@@ -69,15 +70,15 @@ async function onMessage(msg) {
       // 如果开启自动聊天且已经指定了智能聊天的对象才开启机器人聊天\
       if (content) {
         let reply;
-        if (config.DEFAULTBOT == '0') {
+        if (config.DEFAULTBOT === '0') {
           // 天行聊天机器人逻辑
           reply = await superagent.getReply(content);
           console.log('天行机器人回复：', reply);
-        } else if (config.DEFAULTBOT == '1') {
+        } else if (config.DEFAULTBOT === '1') {
           // 图灵聊天机器人
           reply = await superagent.getTuLingReply(content);
           console.log('图灵机器人回复：', reply);
-        } else if (config.DEFAULTBOT == '2') {
+        } else if (config.DEFAULTBOT === '2') {
           // 天行对接的图灵聊
           reply = await superagent.getTXTLReply(content);
           console.log('天行对接的图灵机器人回复：', reply);
@@ -93,6 +94,20 @@ async function onMessage(msg) {
   }
 }
 
+function initTestTask() {
+
+  console.log(`设定测试定时任务`);
+
+  //设置定时任务
+  config.testTask.forEach(task => {
+    console.log('测试定时任务已设定！');
+    schedule.scheduleJob(task.testDate, async () => {
+      console.log('测试定时任务开始工作啦');
+      console.log(task.testMsg);
+    });
+  });
+}
+
 // 创建微信每日说定时任务
 async function initDay() {
   console.log(`已经设定每日说任务`);
@@ -100,7 +115,7 @@ async function initDay() {
   //设置定时任务
   config.tasks.forEach(task => {
     console.log('已经设定定时任务！');
-    schedule.setSchedule(task.date, async () => {
+    schedule.scheduleJob(task.date, async () => {
       console.log('定时任务开始工作啦！');
       let logMsg;
       let contact = (await bot.Contact.find({alias: task.alias})); // 获取你要发送的联系人
@@ -120,7 +135,7 @@ async function initDay() {
   });
 
   //设定每日说任务
-  schedule.setSchedule(config.SENDDATE, async () => {
+  schedule.scheduleJob(config.CRON_EXP, async () => {
     console.log('你的贴心小助理开始工作啦！');
     let logMsg;
     let contact =
@@ -161,5 +176,9 @@ bot.on('message', onMessage);
 
 bot
     .start()
-    .then(() => console.log('开始登陆微信'))
+    .then(() => {
+      console.log('开始登陆微信');
+      // 登陆后创建定时任务
+      initTestTask();
+    })
     .catch((e) => console.error(e));
