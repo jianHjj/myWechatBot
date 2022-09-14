@@ -4,6 +4,7 @@ module.exports = {
   NAME: '公主殿下', //女朋友备注姓名
   NICKNAME: '公主殿下', //女朋友昵称
   MEMORIAL_DAY: '2021/10/23', //你和女朋友的纪念日
+  BIRTHDAY: [3, 29], //女朋友生日-农历
   CITY: '广州', //女朋友所在城市（城市名称，不要带“市”）
   CRON_EXP: {tz: 'Asia/Shanghai', rule: '13 20 5 * * *'}, //定时发送时间 每天13点14分0秒发送，规则见 /schedule/index.js
   TXAPIKEY: 'bc3cd84973cd8218a526d756a79fe891', //此处须填写个人申请的天行apikey,请替换成自己的 申请地址https://www.tianapi.com/signup.html?source=474284281

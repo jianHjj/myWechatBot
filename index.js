@@ -5,7 +5,7 @@
 const {WechatyBuilder} = require('wechaty');
 const schedule = require('node-schedule');
 const config = require('./config/index');
-const untils = require('./utils/index');
+const utils = require('./utils/index');
 const superagent = require('./superagent/index');
 
 // 延时函数，防止检测出类似机器人行为操作
@@ -143,8 +143,8 @@ async function initDay() {
         (await bot.Contact.find({alias: config.NAME})); // 获取你要发送的联系人
     let one = await superagent.getOne(); //获取每日一句
     let weather = await superagent.getTXweather(); //获取天气信息
-    let today = await untils.formatDate(new Date()); //获取今天的日期
-    let memorialDay = untils.getDay(config.MEMORIAL_DAY); //获取纪念日天数
+    let today = await utils.formatDate(new Date()); //获取今天的日期
+    let memorialDay = utils.getDay(config.MEMORIAL_DAY); //获取纪念日天数
     let sweetWord = await superagent.getSweetWord();
 
     // 你可以修改下面的 str 来自定义每日说的内容和格式
@@ -158,6 +158,32 @@ async function initDay() {
       logMsg = e.message;
     }
     console.log(logMsg);
+  });
+
+  //设定生日监听器-农历 每天零点过一秒触发比较当前日期农历是否匹配农历生日
+  schedule.scheduleJob('1 0 0 * * *', async () => {
+    console.log("定时任务启动-当前日期农历匹配农历生日");
+    let [month, day] = utils.getLunarDateNumber(new Date());
+    let [birthdayMonth, birthdayDay] = config.BIRTHDAY;
+    if (month === birthdayMonth
+        && day === birthdayDay) {
+      //生日匹配成功
+      console.log("生日匹配成功 生日为：" + month + "月" + day);
+      //送上生日祝福
+      let logMsg;
+      let contact =
+          (await bot.Contact.find({name: config.NICKNAME})) ||
+          (await bot.Contact.find({alias: config.NAME})); // 获取你要发送的联系人
+      let str = "别怕光阴漫长，我都会在你身边，哪怕白发苍苍，宝宝，生日快乐~";
+      try {
+        logMsg = str;
+        await delay(2000);
+        await contact.say(str); // 发送消息
+      } catch (e) {
+        logMsg = e.message;
+      }
+      console.log(logMsg);
+    }
   });
 }
 

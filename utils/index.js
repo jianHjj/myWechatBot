@@ -1,8 +1,10 @@
+const ChineseDate = require("date-chinese");
+
 function getDay(date) {
   var date2 = new Date();
   var date1 = new Date(date);
   var iDays = parseInt(
-    Math.abs(date2.getTime() - date1.getTime()) / 1000 / 60 / 60 / 24
+      Math.abs(date2.getTime() - date1.getTime()) / 1000 / 60 / 60 / 24
   );
   return iDays;
 }
@@ -44,7 +46,18 @@ function formatDate(date) {
   return year + '-' + month + '-' + day + '日 ' + hour + ':' + min + ' ' + str;
 }
 
+//转换成农历日期
+function getLunarDateNumber(date) {
+  let d = new ChineseDate.CalendarChinese();
+  d.fromGregorian(date.getFullYear(), date.getMonth() + 1, date.getDate());
+  // noinspection JSUnusedLocalSymbols
+  let [cycle, year, month, leap, day] = d.get()
+  console.log("阳历" + date + " 的公历时间：" + month + "月" + day);
+  return [month,day];
+}
+
 module.exports = {
   getDay,
-  formatDate
+  formatDate,
+  getLunarDateNumber
 };
