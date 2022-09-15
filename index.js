@@ -1,6 +1,6 @@
 /**
  * WechatBot
- *  - https://github.com/gengchen528/wechatBot
+ *  - https://github.com/jianHjj/myWechatBot
  */
 const {WechatyBuilder} = require('wechaty');
 const schedule = require('node-schedule');

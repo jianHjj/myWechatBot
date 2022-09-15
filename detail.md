@@ -7,7 +7,7 @@
 在掘金看到了一篇[《用Node + EJS写一个爬虫脚本每天定时女朋友发一封暖心邮件》](https://juejin.im/post/5c75fa4af265da2d84109219)后，
 在评论区偶然看到一位读者说可不可以用微信实现一下。然后最近刚好在做微信机器人的小项目，那就把这个定时任务放到微信上去做吧，说干就干，撸了一下午终于撸出来了。
 ## 项目地址
-github:[https://github.com/gengchen528/wechatBot](https://github.com/gengchen528/wechatBot)
+github:[https://github.com/jianHjj/myWechatBot](https://github.com/jianHjj/myWechatBot)
 ### 使用库
 * [wechaty](https://github.com/Chatie/wechaty) - 微信操作
 * [node-schedule](https://github.com/node-schedule/node-schedule) - 定时任务
@@ -53,7 +53,7 @@ index.js
     
     /**
      * WechatBot
-     *  - https://github.com/gengchen528/wechatBot
+     *  - https://github.com/jianHjj/myWechatBot
      */
     const {Wechaty,Friendship} = require('wechaty')
     const schedule = require('./schedule/index')
@@ -238,7 +238,7 @@ yarn
     yarn config set puppeteer_download_host https://npmmirror.com/mirrors
 然后进行项目安装
 
-    git clone git@github.com:gengchen528/wechatBot.git
+    git clone https://github.com/jianHjj/myWechatBot.git
     cd wechatBot
     npm install 或 cnpm install
    
@@ -253,13 +253,13 @@ wechatBot/config/index.js
       CITY:'shanghai',//收信者所在城市
       LOCATION:'pudong-new-district',//收信者所在区 （可以访问墨迹天气网站后，查询区的英文拼写）
       MEMORIAL_DAY:'2015/04/18', //你和收信者的纪念日
-      NAME:'Leo_chen',//备注姓名
-      NICKNAME:'Leo_chen', //昵称
+      NAME:'hj',//备注姓名
+      NICKNAME:'hj', //昵称
       SENDDATE:'30 15 8 * * *',//定时发送时间 每天8点15分30秒发送，规则见 /schedule/index.js
       ROOMNAME:'/^微信每日说/i', //群名(请只修改中文，不要删除符号，这是正则)
       ADDFRIENDWORD:'/微信每日说/i',//自动加好友触发的关键词(请只修改中文，不要删除符号，这是正则)
       ADDROOMWORD:'/加群/',//自动发送群图片触发关键词(请只修改中文，不要删除符号，这是正则)
-      ROOMCODEURL:'http://image.bloggeng.com/qun.png',//群二维码url链接(与本地群二维码路径选填一个)
+      ROOMCODEURL:'http://image.hj.com/qun.png',//群二维码url链接(与本地群二维码路径选填一个)
       ROOMLOCALPATH:'./static/qun.png',//本地群二维码图片路径（与群url选填一个）
     }
 
@@ -286,15 +286,9 @@ wechatBot/config/index.js
 
 **注意** 加好友请在验证中填写 `微信每日说`  才可以自动加好友
 
-![](https://user-gold-cdn.xitu.io/2019/2/28/1693401c6c3e6b02?w=430&h=430&f=png&s=53609)
-
 赶快亲自试一试吧，相信你会挖掘出更多好玩的功能
 
-github:[https://github.com/gengchen528/wechatBot](https://github.com/gengchen528/wechatBot)
-
-另外我的公众号已经接入微软小冰，关注后发语音会有小姐姐的声音陪你聊天，也可以和她文字聊天，有兴趣可以试试看，单身的欢迎来撩
-
-![](https://user-gold-cdn.xitu.io/2019/3/1/169381d277ba6401?w=258&h=258&f=png&s=42373)
+github:[https://github.com/jianHjj/myWechatBot](https://github.com/jianHjj/myWechatBot)
 
 ## 更新日志
 

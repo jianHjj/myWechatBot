@@ -6,7 +6,7 @@
 ![](https://img.shields.io/badge/Mac-yellow.svg)
 ![](https://img.shields.io/badge/Centos-blue.svg)
 
-wechatBot 是基于 node 与 [wechaty](https://github.com/Chatie/wechaty) 的微信小情话工具。最初功能只有每日发送天气和一句情话，后来添加了智能机器人聊天功能。但由于本项目面向小白用户与刚接触 node 开发的用户，故拆分了两个项目，一个是功能专一面向小白的 [《微信每日说》](https://github.com/gengchen528/wechatBot) （也就是本项目） ，另一个也在我的仓库下 [《智能微秘书》](https://github.com/gengchen528/wechat-assistant-pro) 面向有较多编程经验的用户。下面主要介绍微信每日说的使用
+wechatBot 是基于 node 与 [wechaty](https://github.com/Chatie/wechaty) 的微信小情话工具。最初功能只有每日发送天气和一句情话，后来添加了智能机器人聊天功能。本项目面向小白用户与刚接触 node 开发的用户
 
 ## 最新通知 喜大普奔
 
@@ -21,7 +21,6 @@ uos 又可以重新使用了~~由于UOS桌面版协议微信已经关闭了，�
 - [x] 定时给女朋友发送每日天气提醒，以及每日一句
 - [x] 天行机器人自动陪女朋友聊天（需要自己申请[天行机器人](https://www.tianapi.com/signup.html?source=474284281)api，不过目前开源的机器人 api 都不要抱太大希望，因为很傻的，如果你有发现好的机器人可以来推荐）
 - [x] 垃圾分类功能，使用方法：？垃圾名称
-- [x] 想要更多群管理，自动加好友功能，群定时任务，好友定时任务，并体验在线配置服务，请移步[《智能微秘书》](https://github.com/gengchen528/wechat-assistant-pro)
 
 ### 可选聊天机器人
 
@@ -120,7 +119,7 @@ npm config set puppeteer_download_host https://npm.taobao.org/mirrors
 
 ```bash
 # 如果没有安装 git，也可直接下载项目zip包
-git clone https://github.com/leochen-g/wechatBot.git
+git clone https://github.com/jianHjj/myWechatBot.git
 cd wechatBot
 npm install
 ```
@@ -164,13 +163,13 @@ npm install
 ![](https://user-gold-cdn.xitu.io/2019/6/16/16b5fbf97805f02e?w=959&h=779&f=png&s=73686)
 
 <div>
-    <img style="width:43%;display:inline-block;" src="http://image.bloggeng.com/WechatIMG62069.jpeg">
-    <img style="width:43%;display:inline-block" src="http://image.bloggeng.com/WechatIMG62085.jpeg">
+    <img style="width:43%;display:inline-block;" src="http://image.bloggeng.com/WechatIMG62069.jpeg" alt="">
+    <img style="width:43%;display:inline-block" src="http://image.bloggeng.com/WechatIMG62085.jpeg" alt="">
 </div>
 
 <div>
-<img style="width:43%;display:inline-block;margin-right:10%" src="https://user-gold-cdn.xitu.io/2019/6/16/16b5fc09ba9648f6?w=396&h=897&f=png&s=72212"alt="">
-<img style="width:43%;display:inline-block;" src="https://user-gold-cdn.xitu.io/2019/6/16/16b5fbdd0d8cf81f?w=401&h=592&f=png&s=55280" >
+<img style="width:43%;display:inline-block;margin-right:10%" src="https://user-gold-cdn.xitu.io/2019/6/16/16b5fc09ba9648f6?w=396&h=897&f=png&s=72212" alt="">
+<img style="width:43%;display:inline-block;" src="https://user-gold-cdn.xitu.io/2019/6/16/16b5fbdd0d8cf81f?w=401&h=592&f=png&s=55280"  alt="">
 </div>
 
 ## 常见问题处理 (FAQ)
@@ -181,7 +180,6 @@ npm install
 - 确认 npm 或 yarn 已经配置好淘宝源
 - 存在 package-lock.json 文件先删除
 - 删除`node_modules`后重新执行`npm install` 或`cnpm install`
-- 使用最新版[《智能微秘书》](https://github.com/leochen-g/wechat-assistant-pro)，摆脱环境问题
 
 1. 我的微信号无法登陆
     
@@ -287,21 +285,6 @@ npm install
 ## 鸣谢
 
 感谢[天行数据](https://www.tianapi.com/)提供，天气，土味情话，智能机器人 api 等接口
-
-## 捐助
-
-如果您认为这个项目对你有所帮助，是否可以为它捐助一点资金呢？
-
-不管钱多钱少，您的捐助将会激励我持续开发新的功能！🎉
-
-感谢您的支持！
-
-捐助方法如下：
-
-<div style="display: flex;justify-content: flex-start">
-<img width="300" height="350" src="http://image.xkboke.com/web-inn/aibotk-weixin.png" />
-<img width="300" height="350" src="http://image.xkboke.com/web-inn/aibotk-alipay.png" />
-</div>
 
 ## 更新日志
 
