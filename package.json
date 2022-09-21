@@ -4,7 +4,7 @@
     "description": "",
     "superagent": "index.js",
     "scripts": {
-        "start": "node index.js",
+        "start": "ts-node index.js",
         "puppet-install": "node node_modules/.bin/wechaty-puppet-install"
     },
     "keywords": [
@@ -24,6 +24,7 @@
         "nzh": "^1.0.8",
         "qrcode-terminal": "^0.12.0",
         "superagent": "^4.1.0",
+        "ts-node": "^10.9.1",
         "wechaty": "^1.20.2",
         "wechaty-puppet-wechat": "^1.18.4"
     }
