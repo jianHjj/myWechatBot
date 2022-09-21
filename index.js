@@ -7,6 +7,7 @@ const schedule = require('node-schedule');
 const config = require('./config/index');
 const utils = require('./utils/index');
 const superagent = require('./superagent/index');
+const converterCn = require("nzh/cn");
 
 // 延时函数，防止检测出类似机器人行为操作
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -95,7 +96,6 @@ async function onMessage(msg) {
 }
 
 function initTestTask() {
-
   console.log(`设定测试定时任务`);
 
   //设置定时任务
@@ -106,6 +106,19 @@ function initTestTask() {
       console.log(task.testMsg);
     });
   });
+}
+
+async function sendMsg(str, contact) {
+  let logMsg;
+  try {
+    logMsg = str;
+    await delay(2000);
+    await contact.say(str); // 发送消息
+  } catch (e) {
+    logMsg = e.message;
+  } finally {
+    console.log(logMsg);
+  }
 }
 
 // 创建微信每日说定时任务
@@ -137,7 +150,6 @@ async function initDay() {
   //设定每日说任务
   schedule.scheduleJob(config.CRON_EXP, async () => {
     console.log('你的贴心小助理开始工作啦！');
-    let logMsg;
     let contact =
         (await bot.Contact.find({name: config.NICKNAME})) ||
         (await bot.Contact.find({alias: config.NAME})); // 获取你要发送的联系人
@@ -145,19 +157,18 @@ async function initDay() {
     let weather = await superagent.getTXweather(); //获取天气信息
     let today = await utils.formatDate(new Date()); //获取今天的日期
     let memorialDay = utils.getDay(config.MEMORIAL_DAY); //获取纪念日天数
+    let isMemorialDay = utils.cmpOnMonthDay(config.MEMORIAL_DAY); //当前日期是否是纪念日
     let sweetWord = await superagent.getSweetWord();
 
     // 你可以修改下面的 str 来自定义每日说的内容和格式
     // PS: 如果需要插入 emoji(表情), 可访问 "https://getemoji.com/" 复制插入
     let str = `${today}\n我们在一起的第${memorialDay}天\n\n九月小邓同学也要注意防晒哦！\n\n元气满满的一天开始啦,今天也要开心噢^_^\n\n今日天气\n${weather.weatherTips}\n${weather.todayWeather}\n每日一句:\n${one}\n\n每日土味情话：\n${sweetWord}\n\n————————爱你的噗噗同学`;
-    try {
-      logMsg = str;
-      await delay(2000);
-      await contact.say(str); // 发送消息
-    } catch (e) {
-      logMsg = e.message;
+    await sendMsg(str, contact);
+    if (isMemorialDay) {
+      //是纪念日，发送纪念日消息
+      let yearCn = converterCn.nzhcn.encodeS(new Date().getFullYear() - new Date(config.MEMORIAL_DAY).getFullYear())
+      await sendMsg(`宝宝，今天是${today}，是我们在一起的第${yearCn}个春夏秋冬~~\n 感谢所有的星星，让我在茫茫人海中偶遇到你，宝宝陪伴着我的时光里我无比的快乐，我很贪心的说，就这样的时光多久都不够呀。当每一次醒来望着你熟睡的脸庞，就觉得岁月静好不过如此惹。宝宝，${yearCn}周年快乐！！！`, contact);
     }
-    console.log(logMsg);
   });
 
   //设定生日监听器-农历 每天零点过一秒触发比较当前日期农历是否匹配农历生日

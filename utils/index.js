@@ -3,10 +3,18 @@ const ChineseDate = require("date-chinese");
 function getDay(date) {
   var date2 = new Date();
   var date1 = new Date(date);
-  var iDays = parseInt(
-      Math.abs(date2.getTime() - date1.getTime()) / 1000 / 60 / 60 / 24
-  );
-  return iDays;
+  return Math.abs(date2.getTime() - date1.getTime()) / 1000 / 60 / 60 / 24;
+}
+
+/**
+ * 比较月份是否相同
+ * @param date
+ */
+function cmpOnMonthDay(date) {
+  var now = new Date();
+  var d = new Date(date);
+  return d.getMonth() === now.getMonth()
+      && d.getDate() === now.getDate();
 }
 
 function formatDate(date) {
@@ -53,11 +61,12 @@ function getLunarDateNumber(date) {
   // noinspection JSUnusedLocalSymbols
   let [cycle, year, month, leap, day] = d.get()
   console.log("阳历" + date + " 的公历时间：" + month + "月" + day);
-  return [month,day];
+  return [month, day];
 }
 
 module.exports = {
   getDay,
   formatDate,
-  getLunarDateNumber
+  getLunarDateNumber,
+  cmpOnMonthDay
 };
