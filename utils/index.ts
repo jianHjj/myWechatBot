@@ -3,7 +3,7 @@ const ChineseDate = require("date-chinese");
 function getDay(date: string): number {
     var date2 = new Date();
     var date1 = new Date(date);
-    return Math.abs(date2.getTime() - date1.getTime()) / 1000 / 60 / 60 / 24;
+    return Math.floor(Math.abs(date2.getTime() - date1.getTime()) / 1000 / 60 / 60 / 24);
 }
 
 /**
