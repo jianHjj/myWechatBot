@@ -1,5 +1,9 @@
 const superagent = require('superagent')
 
+require('superagent-proxy')(superagent)
+
+var proxy = process.env.http_proxy || 'http://127.0.0.1:10810';
+
 /**
  *
  * @param url 请求地址
@@ -15,6 +19,7 @@ function req({url, method, params, data, cookies, spider = false, platform = 'tx
     return new Promise(function (resolve, reject) {
         superagent(method, url)
             .query(params)
+            .proxy(proxy)
             .send(data)
             .set('Content-Type', 'application/x-www-form-urlencoded')
             .end(function (err, response) {
