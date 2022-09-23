@@ -117,15 +117,23 @@ async function reqShopInfo(asin: string): Promise<ShopInfo | undefined> {
         let tdArray = $('#productDetails_detailBullets_sections1').find('td');
         //从商品详情中抽取排名
         var topList = tdArray.eq(tdArray.length - 2).text().replace(',', '').split("#");
-        var topBigMatch = topList[1].trim().match(new RegExp('^\\d*'));
+
+        var t1 = topList[1];
         let topBig = "";
-        if (topBigMatch) {
-            topBig = topBigMatch[0].trim();
+        if (t1) {
+            var topBigMatch = t1.trim().match(new RegExp('^\\d*'));
+            if (topBigMatch) {
+                topBig = topBigMatch[0].trim();
+            }
         }
-        var topSmallMatch = topList[2].trim().match(new RegExp('^\\d*'));
+
+        var t2 = topList[2];
         let topSmall = "";
-        if (topSmallMatch) {
-            topSmall = topSmallMatch[0].trim();
+        if (t2) {
+            var topSmallMatch = t2.trim().match(new RegExp('^\\d*'));
+            if (topSmallMatch) {
+                topSmall = topSmallMatch[0].trim();
+            }
         }
         shopInfo.review = new ShopReviewInfo(asin, topBig, topSmall, ratingsTotal, ratingsCount, '');
         return shopInfo;

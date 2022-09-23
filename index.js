@@ -70,7 +70,10 @@ async function onMessage(msg) {
       var shopInfoList = await amazon_shop_info.getShopInfo(asinList);
       var firstInfoList = [];
       for (let i = 0; i < shopInfoList.length; i++) {
-        firstInfoList[i] = shopInfoList[i].first;
+        var shopInfo = shopInfoList[i];
+        if (shopInfo) {
+          firstInfoList[i] = shopInfo.first;
+        }
       }
       await delay(2000);
       await contact.say(firstInfoList.join(`\n`));
