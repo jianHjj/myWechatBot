@@ -89,27 +89,52 @@ async function reqShopInfo(asin: string): Promise<ShopInfo | undefined> {
         let res = await superagent.req({url: url, method: 'GET', spider: true});
         let $ = cheerio.load(res);
         //价格信息
+        let shopInfo = undefined;
         let price = $('#corePriceDisplay_desktop_feature_div');
-        //真实价格-折扣价
-        let offsetPrice = price
-            .find('.a-spacing-none .priceToPay .a-offscreen')
-            .text()
-            .replace(/(^\s*)|(\s*$)/g, '').replace('$', '');
-        let basisPrice = price
-            .find('.a-spacing-small .basisPrice .a-text-price .a-offscreen')
-            .text()
-            .replace(/(^\s*)|(\s*$)/g, '').replace('$', '');
-        //获取折扣
-        let offset = parseInt(basisPrice) - parseInt(offsetPrice);
-        let deliveryPrice = $('#mir-layout-DELIVERY_BLOCK-slot-PRIMARY_DELIVERY_MESSAGE_LARGE')
-            .find('.data-csa-c-delivery-price')
-            .text()
-            .replace(/(^\s*)|(\s*$)/g, '').replace('$', '');
-        let first: string = `${basisPrice}-${offset}`;
-        if (deliveryPrice !== '') {
-            first += `${deliveryPrice}`;
+        if (price) {
+            //真实价格-折扣价
+            let offsetPriceList = price
+                .find('.a-spacing-none .priceToPay .a-offscreen');
+            let offsetPrice = '';
+            if (offsetPriceList) {
+                offsetPrice = offsetPriceList.eq(0)
+                    .text()
+                    .replace(/(^\s*)|(\s*$)/g, '').replace('$', '');
+            }
+
+            let basisPriceList = price
+                .find('.a-spacing-small .basisPrice .a-text-price .a-offscreen');
+            let basisPrice = '';
+            if (basisPriceList) {
+                basisPrice = basisPriceList.eq(0)
+                    .text()
+                    .replace(/(^\s*)|(\s*$)/g, '').replace('$', '');
+            }
+
+            //获取折扣
+            if (!basisPrice || basisPrice === '') {
+                basisPrice = offsetPrice;
+            }
+            let offset = parseInt(basisPrice) - parseInt(offsetPrice);
+            var deliveryPriceAttr = $('#mir-layout-DELIVERY_BLOCK-slot-PRIMARY_DELIVERY_MESSAGE_LARGE').children()
+                .attr('data-csa-c-delivery-price');
+            let deliveryPriceMatch = deliveryPriceAttr ? deliveryPriceAttr
+                    .replace(/(^\s*)|(\s*$)/g, '').replace('$', '').match(new RegExp('\\b\\d*\\.?\\d*\\b'))
+                : undefined;
+            let first: string = offset && offset > 0 ? `${basisPrice}-${offset}` : `${basisPrice}`;
+            let deliveryPrice = '';
+            if (deliveryPriceMatch) {
+                deliveryPrice = deliveryPriceMatch[0].trim();
+                if (deliveryPrice && deliveryPrice !== '') {
+                    first += `+${deliveryPrice}`;
+                }
+            }
+            shopInfo = new ShopInfo(asin, first, basisPrice, offset + '', offsetPrice, deliveryPrice);
         }
-        var shopInfo = new ShopInfo(asin, first, basisPrice, offset + '', offsetPrice, deliveryPrice);
+        if (!shopInfo) {
+            //兼容模式
+
+        }
         //获取review信息
         var ratingsTotal: string = $('#acrPopover .a-declarative .a-popover-trigger .a-icon-star .a-icon-alt').eq(0).text().replace('out of 5 stars', '').trim();
         var ratingsCount: string = $('#acrCustomerReviewText').eq(0).text().replace('ratings', '').trim();
@@ -135,7 +160,9 @@ async function reqShopInfo(asin: string): Promise<ShopInfo | undefined> {
                 topSmall = topSmallMatch[0].trim();
             }
         }
-        shopInfo.review = new ShopReviewInfo(asin, topBig, topSmall, ratingsTotal, ratingsCount, '');
+        if (shopInfo) {
+            shopInfo.review = new ShopReviewInfo(asin, topBig, topSmall, ratingsTotal, ratingsCount, '');
+        }
         return shopInfo;
     } catch (err) {
         console.log('获取商品信息出错', err);
