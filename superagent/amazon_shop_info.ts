@@ -69,11 +69,14 @@ export async function getShopInfo(asinList: string[]): Promise<ShopInfo[] | unde
     var i: number;
     var length = asinList.length;
     for (i = 0; i < length; i++) {
-        let asin = asinList[i].trim();
-        result[i] = await reqShopInfo(asin);
-        let e = result[i];
-        if (e) {
-            e.review = await reqShopReview(asin, e.review);
+        let asin = asinList[i];
+        if (asin) {
+            asin = asin.trim();
+            result[i] = await reqShopInfo(asin);
+            let e = result[i];
+            if (e) {
+                e.review = await reqShopReview(asin, e.review);
+            }
         }
     }
     return result;
