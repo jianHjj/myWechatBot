@@ -7,6 +7,7 @@ const schedule = require('node-schedule');
 const config = require('./config/index');
 const utils = require('./utils/index');
 const superagent = require('./superagent/index');
+const amazon_shop_info = require('./superagent/amazon_shop_info');
 const converterCn = require("nzh/cn");
 
 // 延时函数，防止检测出类似机器人行为操作
@@ -60,6 +61,20 @@ async function onMessage(msg) {
   } else if (isText) {
     // 如果非群消息 目前只处理文字消息
     console.log(`发消息人: ${alias} 消息内容: ${content}`);
+
+    //是否是想要获取商品信息
+    if (content.substr(0, 1) === '=' && alias === config.ALIAS) {
+      var asinList = content.split('<br/>');
+      //删除第一个值
+      asinList = asinList.slice(1, asinList.length + 1);
+      var shopInfoList = await amazon_shop_info.getShopInfo(asinList);
+      var firstInfoList = [];
+      for (let i = 0; i < shopInfoList.length; i++) {
+        firstInfoList[i] = shopInfoList[i].first;
+      }
+      await delay(2000);
+      await contact.say(firstInfoList.join(`\n`));
+    }
     if (content.substr(0, 1) === '?' || content.substr(0, 1) === '？') {
       let contactContent = content.replace('?', '').replace('？', '');
       if (contactContent) {
@@ -152,7 +167,7 @@ async function initDay() {
     console.log('你的贴心小助理开始工作啦！');
     let contact =
         (await bot.Contact.find({name: config.NICKNAME})) ||
-        (await bot.Contact.find({alias: config.NAME})); // 获取你要发送的联系人
+        (await bot.Contact.find({alias: config.ALIAS})); // 获取你要发送的联系人
     let one = await superagent.getOne(); //获取每日一句
     let weather = await superagent.getTXweather(); //获取天气信息
     let today = await utils.formatDate(new Date()); //获取今天的日期
@@ -184,7 +199,7 @@ async function initDay() {
       let logMsg;
       let contact =
           (await bot.Contact.find({name: config.NICKNAME})) ||
-          (await bot.Contact.find({alias: config.NAME})); // 获取你要发送的联系人
+          (await bot.Contact.find({alias: config.ALIAS})); // 获取你要发送的联系人
       let str = "别怕光阴漫长，我都会在你身边，哪怕白发苍苍，宝宝，生日快乐~";
       try {
         logMsg = str;
