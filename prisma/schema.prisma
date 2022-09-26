@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model amazon_goods_price {
+  id             BigInt   @id @default(autoincrement())
+  asin           String   @default("") @db.VarChar(50)
+  date           String   @db.VarChar(20)
+  basis_price    Decimal  @default(0.00) @db.Decimal(10, 2)
+  offset_price   Decimal  @default(0.00) @db.Decimal(10, 2)
+  delivery_price Decimal  @default(0.00) @db.Decimal(10, 2)
+  create_dt      DateTime @default(now()) @db.DateTime(0)
+  last_update_dt DateTime @default(now()) @db.DateTime(0)
+  deleted        Boolean  @default(false)
+
+  @@unique([asin, date], map: "idx_asin_date")
+}
+
+model amazon_goods_review {
+  id                   BigInt   @id @default(autoincrement())
+  asin                 String   @db.VarChar(50)
+  date                 String   @db.VarChar(20)
+  sellers_rank_big     BigInt   @default(-1)
+  sellers_rank_small   BigInt   @default(-1)
+  ratings_total        Decimal  @default(0.0) @db.Decimal(1, 1)
+  ratings_count        BigInt   @default(-1)
+  ratings_review_count BigInt   @default(-1)
+  create_dt            DateTime @default(now()) @db.DateTime(0)
+  last_update_dt       DateTime @default(now()) @db.DateTime(0)
+  deleted              Boolean  @default(false)
+
+  @@unique([asin, date], map: "idx_asin_date")
+}

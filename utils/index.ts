@@ -64,9 +64,34 @@ function getLunarDateNumber(date: Date): number[] {
     return [month, day];
 }
 
+function formatDateYYYYMMDD(date: Date | string): string | undefined {
+    var type = typeof date;
+    var d = null;
+    if (type === 'string') {
+        d = new Date(date);
+    }
+    if (date instanceof Date) {
+        d = date;
+    }
+    if (d) {
+        let month = '' + (d.getMonth() + 1);
+        let day = '' + d.getDate();
+        let year = d.getFullYear();
+
+        if (month.length < 2)
+            month = '0' + month;
+        if (day.length < 2)
+            day = '0' + day;
+
+        return [year, month, day].join('-');
+    }
+    return undefined;
+}
+
 module.exports = {
     getDay,
     formatDate,
     getLunarDateNumber,
-    cmpOnMonthDay
+    cmpOnMonthDay,
+    formatDateYYYYMMDD
 };

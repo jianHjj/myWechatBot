@@ -1,9 +1,19 @@
 const superagent = require('./superagent');
+const utils = require('../utils/index');
+const tc = require('../utils/type_converter');
 
 import cheerio from 'cheerio';
+import {PrismaClient} from "@prisma/client";
+
+const prisma = new PrismaClient({
+    log: ["query", "info", "warn", "error"],
+});
 
 const url_shop_info: string = 'http://www.amazon.com/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/dp/{ASIN}/ref=cm_cr_arp_d_product_top?ie=UTF8';
 const url_shop_review: string = 'https://www.amazon.com/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/product-reviews/{ASIN}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews';
+
+// 延时函数，防止检测出类似机器人行为操作
+const delay = (ms: any) => new Promise((resolve) => setTimeout(resolve, ms));
 
 class ShopInfo {
     asin: string;
@@ -15,6 +25,8 @@ class ShopInfo {
     createDt: Date;
     lastUpdateDt: Date;
     review: ShopReviewInfo | undefined;
+    //是否来自数据库 默认为false
+    fromDB: boolean = false;
 
     // 构造函数
     constructor(asin: string,
@@ -22,7 +34,7 @@ class ShopInfo {
                 basisPrice: string,
                 offset: string,
                 offsetPrice: string,
-                deliveryPrice: string) {
+                deliveryPrice: string, fromDB?: boolean) {
         this.asin = asin;
         this.first = first;
         this.basisPrice = basisPrice;
@@ -31,6 +43,9 @@ class ShopInfo {
         this.deliveryPrice = deliveryPrice;
         this.createDt = new Date();
         this.lastUpdateDt = new Date();
+        if (fromDB) {
+            this.fromDB = fromDB;
+        }
     }
 }
 
@@ -62,6 +77,28 @@ class ShopReviewInfo {
     }
 }
 
+async function getGoods(asin: string, date: Date) {
+    return await prisma.amazon_goods_price.findUnique({
+        where: {
+            asin_date: {
+                asin: asin,
+                date: utils.formatDateYYYYMMDD(date),
+            },
+        },
+    });
+}
+
+async function getGoodReview(asin: string, date: Date) {
+    return await prisma.amazon_goods_review.findUnique({
+        where: {
+            asin_date: {
+                asin: asin,
+                date: utils.formatDateYYYYMMDD(date),
+            },
+        },
+    });
+}
+
 //获取商品信息
 export async function getShopInfo(asinList: string[]): Promise<ShopInfo[] | undefined[]> {
     // 获取商品信息
@@ -72,10 +109,72 @@ export async function getShopInfo(asinList: string[]): Promise<ShopInfo[] | unde
         let asin = asinList[i];
         if (asin) {
             asin = asin.trim();
+            const goods = await getGoods(asin, new Date());
+            if (goods) {
+                //已经爬取到商品信息，直接返回数据
+                let offset = goods.basis_price.toNumber() - goods.offset_price.toNumber();
+                result[i] = new ShopInfo(goods.asin, `${goods.basis_price}-${offset.toFixed(2)}`, tc.number2string(goods.basis_price), offset.toFixed(2), tc.number2string(goods.offset_price), tc.number2string(goods.delivery_price));
+                var r_item = result[i];
+                const r = await getGoodReview(asin, new Date());
+                if (r && r_item) {
+                    //存在review信息
+                    r_item.review = new ShopReviewInfo(r.asin, tc.number2string(r.sellers_rank_big), tc.number2string(r.sellers_rank_small), tc.number2string(r.ratings_total), tc.number2string(r.ratings_count), tc.number2string(r.ratings_review_count));
+                    //如果商品信息都已经存在才不需要重新爬取
+                    r_item.fromDB = true;
+                    continue;
+                }
+            }
+            await delay(2000);
             result[i] = await reqShopInfo(asin);
             let e = result[i];
             if (e) {
+                await delay(2000);
                 e.review = await reqShopReview(asin, e.review);
+            }
+        }
+    }
+
+    for (let e of result) {
+        if (e && !e.fromDB) {
+            //保存result
+            const goods = await getGoods(e.asin, e.createDt);
+
+            if (goods) {
+                //存在商品信息跳过insert
+                continue;
+            }
+
+            const created = await prisma.amazon_goods_price.create({
+                data: {
+                    asin: e.asin,
+                    date: utils.formatDateYYYYMMDD(e.createDt),
+                    basis_price: e.basisPrice === '' ? 0 : e.basisPrice,
+                    offset_price: e.offsetPrice === '' ? 0 : e.offsetPrice,
+                    delivery_price: e.deliveryPrice === '' ? 0 : e.deliveryPrice
+                },
+            });
+
+            const goodReview = await getGoodReview(e.asin, e.createDt);
+
+            if (goodReview) {
+                //存在商品review信息跳过insert
+                continue;
+            }
+
+            var reviewTmp = e.review;
+
+            if (reviewTmp) {
+                const createdGoodsReview = await prisma.amazon_goods_review.create({
+                    data: {
+                        asin: reviewTmp.asin,
+                        date: utils.formatDateYYYYMMDD(reviewTmp.createDt),
+                        sellers_rank_big: reviewTmp.sellersRankBig ? parseInt(reviewTmp.sellersRankBig) : undefined,
+                        sellers_rank_small: reviewTmp.sellersRankSmall ? parseInt(reviewTmp.sellersRankSmall) : undefined,
+                        ratings_total: reviewTmp.ratingsTotal,
+                        ratings_count: reviewTmp.ratingsCount ? parseInt(reviewTmp.ratingsCount) : undefined,
+                        ratings_review_count: reviewTmp.ratingsReviewCount ? parseInt(reviewTmp.ratingsReviewCount) : undefined
+                    },
+                });
             }
         }
     }
