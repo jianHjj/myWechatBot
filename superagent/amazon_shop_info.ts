@@ -201,13 +201,23 @@ async function reqShopInfo(asin: string): Promise<ShopInfo | undefined> {
                     .replace(/(^\s*)|(\s*$)/g, '').replace('$', '');
             }
 
-            let basisPriceList = price
-                .find('.a-spacing-small .basisPrice .a-text-price .a-offscreen');
             let basisPrice = '';
-            if (basisPriceList) {
-                basisPrice = basisPriceList.eq(0)
-                    .text()
-                    .replace(/(^\s*)|(\s*$)/g, '').replace('$', '');
+            if (!offsetPrice || offsetPrice === '') {
+                //兼容另外一种显示风格
+                let pricesStr: string = $('#corePrice_desktop').find('.a-spacing-small').children().children().children().find('.a-text-price .a-offscreen').text();
+                let priceArr: string[] = pricesStr.replace('$', '').split('$');
+                if (priceArr && priceArr.length >= 2) {
+                    basisPrice = priceArr[0];
+                    offsetPrice = priceArr[1];
+                }
+            } else {
+                let basisPriceList = price
+                    .find('.a-spacing-small .basisPrice .a-text-price .a-offscreen');
+                if (basisPriceList) {
+                    basisPrice = basisPriceList.eq(0)
+                        .text()
+                        .replace(/(^\s*)|(\s*$)/g, '').replace('$', '');
+                }
             }
 
             //获取折扣
