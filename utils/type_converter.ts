@@ -1,7 +1,7 @@
 import {Decimal} from "@prisma/client/runtime";
 
 function number2string(n: number | Decimal | undefined): string {
-    return n ? n.toString() : '';
+    return n && n > 0 ? n.toString() : '';
 }
 
 module.exports = {
