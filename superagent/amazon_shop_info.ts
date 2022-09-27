@@ -2,7 +2,7 @@ const superagent = require('./superagent');
 const utils = require('../utils/index');
 const tc = require('../utils/type_converter');
 
-import cheerio from 'cheerio';
+import cheerio, {Cheerio} from 'cheerio';
 import {PrismaClient} from "@prisma/client";
 
 const prisma = new PrismaClient({
@@ -21,6 +21,7 @@ class ShopInfo {
     basisPrice: string;
     offset: string;
     offsetPrice: string;
+    coupon: number;
     deliveryPrice: string;
     createDt: Date;
     lastUpdateDt: Date;
@@ -34,12 +35,15 @@ class ShopInfo {
                 basisPrice: string,
                 offset: string,
                 offsetPrice: string,
-                deliveryPrice: string, fromDB?: boolean) {
+                coupon: number,
+                deliveryPrice: string,
+                fromDB?: boolean) {
         this.asin = asin;
         this.first = first;
         this.basisPrice = basisPrice;
         this.offset = offset;
         this.offsetPrice = offsetPrice;
+        this.coupon = coupon;
         this.deliveryPrice = deliveryPrice;
         this.createDt = new Date();
         this.lastUpdateDt = new Date();
@@ -113,7 +117,12 @@ export async function getShopInfo(asinList: string[]): Promise<ShopInfo[] | unde
             if (goods) {
                 //已经爬取到商品信息，直接返回数据
                 let offset = goods.basis_price.toNumber() - goods.offset_price.toNumber();
-                result[i] = new ShopInfo(goods.asin, `${goods.basis_price}-${offset.toFixed(2)}`, tc.number2string(goods.basis_price), offset.toFixed(2), tc.number2string(goods.offset_price), tc.number2string(goods.delivery_price));
+                result[i] = new ShopInfo(goods.asin, `${goods.offset_price.toNumber().toFixed(2)}-${goods.coupon}`,
+                    tc.number2string(goods.basis_price),
+                    offset.toFixed(2),
+                    tc.number2string(goods.offset_price),
+                    tc.number2string(goods.coupon),
+                    tc.number2string(goods.delivery_price));
                 var r_item = result[i];
                 const r = await getGoodReview(asin, new Date());
                 if (r && r_item) {
@@ -150,7 +159,8 @@ export async function getShopInfo(asinList: string[]): Promise<ShopInfo[] | unde
                     date: utils.formatDateYYYYMMDD(e.createDt),
                     basis_price: e.basisPrice === '' ? 0 : e.basisPrice,
                     offset_price: e.offsetPrice === '' ? 0 : e.offsetPrice,
-                    delivery_price: e.deliveryPrice === '' ? 0 : e.deliveryPrice
+                    delivery_price: e.deliveryPrice === '' ? 0 : e.deliveryPrice,
+                    coupon: e.coupon
                 },
             });
 
@@ -224,13 +234,31 @@ async function reqShopInfo(asin: string): Promise<ShopInfo | undefined> {
             if (!basisPrice || basisPrice === '') {
                 basisPrice = offsetPrice;
             }
+
+            //获取优惠券信息
+            let coupon: number = 0;
+            let couponRoot: Cheerio<any> = $('#promoPriceBlockMessage_feature_div .promoPriceBlockMessage').children();
+            let isCoupon: string | undefined = couponRoot.attr('data-csa-c-coupon');
+            if (isCoupon && isCoupon === 'true') {
+                //是优惠券信息
+                let complexText: string = couponRoot.find('.a-color-success').find('label').text();
+                //开始匹配优惠券价格
+                let couponMatchArr: string[] | null = complexText.split('$')[1]
+                    .match(new RegExp('\\b\\d*\\.?\\d\\b'));
+                if (couponMatchArr && couponMatchArr.length > 0) {
+                    var couponItem = couponMatchArr[0];
+                    if (couponItem) {
+                        coupon = parseInt(couponItem);
+                    }
+                }
+            }
             let offset = parseInt(basisPrice) - parseInt(offsetPrice);
             var deliveryPriceAttr = $('#mir-layout-DELIVERY_BLOCK-slot-PRIMARY_DELIVERY_MESSAGE_LARGE').children()
                 .attr('data-csa-c-delivery-price');
             let deliveryPriceMatch = deliveryPriceAttr ? deliveryPriceAttr
                     .replace(/(^\s*)|(\s*$)/g, '').replace('$', '').match(new RegExp('\\b\\d*\\.?\\d*\\b'))
                 : undefined;
-            let first: string = offset && offset > 0 ? `${basisPrice}-${offset}` : `${basisPrice}`;
+            let first: string = coupon && coupon > 0 ? `${offsetPrice}-${coupon}` : `${offsetPrice}`;
             let deliveryPrice = '';
             if (deliveryPriceMatch) {
                 deliveryPrice = deliveryPriceMatch[0].trim();
@@ -238,12 +266,9 @@ async function reqShopInfo(asin: string): Promise<ShopInfo | undefined> {
                     first += `+${deliveryPrice}`;
                 }
             }
-            shopInfo = new ShopInfo(asin, first, basisPrice, offset + '', offsetPrice, deliveryPrice);
+            shopInfo = new ShopInfo(asin, first, basisPrice, offset + '', offsetPrice, coupon, deliveryPrice);
         }
-        if (!shopInfo) {
-            //兼容模式
 
-        }
         //获取review信息
         var ratingsTotal: string = $('#acrPopover .a-declarative .a-popover-trigger .a-icon-star .a-icon-alt').eq(0).text().replace('out of 5 stars', '').trim();
         var ratingsCount: string = $('#acrCustomerReviewText').eq(0).text().replace('ratings', '').trim();

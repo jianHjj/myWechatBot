@@ -72,7 +72,7 @@ async function onMessage(msg) {
       for (let i = 0; i < shopInfoList.length; i++) {
         var shopInfo = shopInfoList[i];
         if (shopInfo) {
-          firstInfoList[i] = shopInfo.first;
+          firstInfoList[i] = '=' + shopInfo.first;
         }
       }
       await delay(2000);
