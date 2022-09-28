@@ -227,6 +227,8 @@ export async function getShopInfo(asinList: string[]): Promise<ShopInfo[] | unde
 const CHAR_DOLLAR: string = '$';
 /*百分比符号*/
 const CHAR_PERCENT: string = '%';
+/*排名 talbe->th 内容*/
+const RANK_DESC: string = 'Best Sellers Rank';
 
 //拼接优惠券信息
 function concatCouponPrice(s: string, couponPrice: string | any) {
@@ -336,30 +338,43 @@ async function reqShopInfo(asin: string): Promise<ShopInfo | undefined> {
         }
 
         //获取review信息
-        var ratingsTotal: string = $('#acrPopover .a-declarative .a-popover-trigger .a-icon-star .a-icon-alt').eq(0).text().replace('out of 5 stars', '').trim();
-        var ratingsCount: string = $('#acrCustomerReviewText').eq(0).text().replace('ratings', '').trim();
+        var ratingsTotal: string = $('#acrPopover .a-declarative .a-popover-trigger .a-icon-star .a-icon-alt').eq(0).text()
+            .replace('out of 5 stars', '').trim();
+        var ratingsCount: string = $('#acrCustomerReviewText').eq(0).text()
+            .replace('ratings', '')
+            .replace(',', '').trim();
         //获取商品详情
-        let tdArray = $('#productDetails_detailBullets_sections1').find('td');
-        //从商品详情中抽取排名
-        var topList = tdArray.eq(tdArray.length - 2).text().replace(',', '').split("#");
-
-        var t1 = topList[1];
+        var table = $('#productDetails_detailBullets_sections1');
+        let tdArray = table.find('td');
+        let thArray = table.find('th');
+        var tableLength = thArray.length;
         let topBig = "";
-        if (t1) {
-            var topBigMatch = t1.trim().match(new RegExp('^\\d*'));
-            if (topBigMatch) {
-                topBig = topBigMatch[0].trim();
+        let topSmall = "";
+        for (let i = 0; i < tableLength; i++) {
+            var th = thArray.eq(i).text();
+            if (th.includes(RANK_DESC)) {
+                //从商品详情中抽取排名
+                var topList = tdArray.eq(i).text().replace(',', '').split("#");
+
+                var t1 = topList[1];
+                if (t1) {
+                    var topBigMatch = t1.trim().match(new RegExp('^\\d*'));
+                    if (topBigMatch) {
+                        topBig = topBigMatch[0].trim();
+                    }
+                }
+
+                var t2 = topList[2];
+                if (t2) {
+                    var topSmallMatch = t2.trim().match(new RegExp('^\\d*'));
+                    if (topSmallMatch) {
+                        topSmall = topSmallMatch[0].trim();
+                    }
+                }
+                break;
             }
         }
 
-        var t2 = topList[2];
-        let topSmall = "";
-        if (t2) {
-            var topSmallMatch = t2.trim().match(new RegExp('^\\d*'));
-            if (topSmallMatch) {
-                topSmall = topSmallMatch[0].trim();
-            }
-        }
         if (shopInfo) {
             shopInfo.review = new ShopReviewInfo(asin, topBig, topSmall, ratingsTotal, ratingsCount, '');
         }
@@ -382,7 +397,9 @@ async function reqShopReview(asin: string, review?: ShopReviewInfo | undefined):
         var url: string = url_shop_review.replace("{ASIN}", asin)
         let res = await superagent.req({url: url, method: 'GET', spider: true});
         let $ = cheerio.load(res);
-        let reviewCountMatch = $('#filter-info-section .a-row').text().split(",")[1].match('\\b\\d*\\b');
+        let reviewCountMatch = $('#filter-info-section .a-row').text()
+            .replace(new RegExp(',','g'),'')
+            .split("ratings")[1].match('\\b\\d*\\b');
         if (reviewCountMatch) {
             review.ratingsReviewCount = reviewCountMatch[0].trim();
         }
