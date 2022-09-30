@@ -58,6 +58,17 @@ class ShopInfo {
     }
 }
 
+//excel headers
+export const ExcelHeadersReview: Object[] = [
+    {caption: "asin", type: "string"},
+    {caption: "大排名", type: "string"},
+    {caption: "小排名", type: "string"},
+    {caption: "总评分", type: "string"},
+    {caption: "评分数", type: "string"},
+    {caption: "评分评论数", type: "string"},
+    {caption: "日期", type: "string"},
+];
+
 class ShopReviewInfo {
     asin: string;
     sellersRankBig: string | undefined;
@@ -398,7 +409,7 @@ async function reqShopReview(asin: string, review?: ShopReviewInfo | undefined):
         let res = await superagent.req({url: url, method: 'GET', spider: true});
         let $ = cheerio.load(res);
         let reviewCountMatch = $('#filter-info-section .a-row').text()
-            .replace(new RegExp(',','g'),'')
+            .replace(new RegExp(',', 'g'), '')
             .split("ratings")[1].match('\\b\\d*\\b');
         if (reviewCountMatch) {
             review.ratingsReviewCount = reviewCountMatch[0].trim();

@@ -9,6 +9,8 @@ const utils = require('./utils/index');
 const superagent = require('./superagent/index');
 const amazon_shop_info = require('./superagent/amazon_shop_info');
 const converterCn = require("nzh/cn");
+const mailer = require("./utils/emailer");
+const excel = require('excel-export');
 
 // 延时函数，防止检测出类似机器人行为操作
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -65,6 +67,8 @@ async function onMessage(msg) {
     //是否是想要获取商品信息
     if (content.substr(0, 1) === '=' && alias === config.ALIAS) {
       var asinList = content.split('<br/>');
+      //是否发送邮件
+      var sendEmail = content.substr(0, 1) === '=@';
       //删除第一个值
       asinList = asinList.slice(1, asinList.length + 1);
       var shopInfoList = await amazon_shop_info.getShopInfo(asinList);
@@ -75,6 +79,25 @@ async function onMessage(msg) {
           firstInfoList[i] = '=' + shopInfo.first;
         }
       }
+
+      if (sendEmail) {
+        //发送邮件
+        var length = shopInfoList.length;
+        var columns = [];
+        for (let i = 0; i < length; i++) {
+          var review = shopInfoList[i].review;
+          columns[i] = [review.sellersRankBig, review.sellersRankSmall, review.ratingsTotal, review.ratingsCount, review.ratingsReviewCount, utils.formatDateYYYYMMDD(review.createDt)]
+        }
+        //导出excel
+        var conf = {};
+        conf.cols = amazon_shop_info.ExcelHeadersReview;
+        conf.name = 'sheet1';
+        conf.rows = columns;
+        var r = excel.execute(conf);
+        var mailAttachment = new mailer.MailAttachment(`排名-${utils.formatDateYYYYMMDD(new Date())}.xlsx`, Buffer.from(r));
+        await mailer.send(new mailer.MailBody(`18207307296@163.com`, "第二份测试邮件", "测试内容哦", [mailAttachment]));
+      }
+
       await delay(2000);
       await contact.say(firstInfoList.join(`\n`));
     }

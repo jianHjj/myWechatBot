@@ -4,7 +4,7 @@
     "description": "",
     "superagent": "index.js",
     "scripts": {
-        "start": "ts-node index.js",
+        "start": "ts-node index.js --trace-warnings",
         "puppet-install": "node node_modules/.bin/wechaty-puppet-install"
     },
     "keywords": [
@@ -16,19 +16,24 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "@prisma/client": "^4.3.1",
+        "@prisma/client": "^4.4.0",
         "cheerio": "^1.0.0-rc.2",
         "date-chinese": "^2.1.4",
+        "excel-export": "^0.5.1",
         "md5": "^2.2.1",
         "node-machine-id": "^1.1.12",
         "node-schedule": "^1.3.2",
+        "nodemailer": "^6.8.0",
         "nzh": "^1.0.8",
-        "prisma": "^4.3.1",
         "qrcode-terminal": "^0.12.0",
         "superagent": "^4.1.0",
         "superagent-proxy": "^3.0.0",
         "ts-node": "^10.9.1",
         "wechaty": "^1.20.2",
         "wechaty-puppet-wechat": "^1.18.4"
+    },
+    "devDependencies": {
+        "@types/fs-extra": "^9.0.13",
+        "prisma": "^4.4.0"
     }
 }
