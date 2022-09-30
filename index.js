@@ -2,6 +2,8 @@
  * WechatBot
  *  - https://github.com/jianHjj/myWechatBot
  */
+import Env from './utils/env';
+
 const {WechatyBuilder} = require('wechaty');
 const schedule = require('node-schedule');
 const config = require('./config/index');
@@ -10,7 +12,8 @@ const superagent = require('./superagent/index');
 const amazon_shop_info = require('./superagent/amazon_shop_info');
 const converterCn = require("nzh/cn");
 const mailer = require("./utils/emailer");
-const excel = require('excel-export');
+const xlsx = require("xlsx");
+const env = new Env();
 
 // 延时函数，防止检测出类似机器人行为操作
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -66,9 +69,9 @@ async function onMessage(msg) {
 
     //是否是想要获取商品信息
     if (content.substr(0, 1) === '=' && alias === config.ALIAS) {
-      var asinList = content.split('<br/>');
+      let asinList = content.split('<br/>');
       //是否发送邮件
-      var sendEmail = content.substr(0, 1) === '=@';
+      let sendEmail = content.substr(0, 2) === '=@';
       //删除第一个值
       asinList = asinList.slice(1, asinList.length + 1);
       var shopInfoList = await amazon_shop_info.getShopInfo(asinList);
@@ -82,20 +85,20 @@ async function onMessage(msg) {
 
       if (sendEmail) {
         //发送邮件
-        var length = shopInfoList.length;
-        var columns = [];
-        for (let i = 0; i < length; i++) {
-          var review = shopInfoList[i].review;
-          columns[i] = [review.sellersRankBig, review.sellersRankSmall, review.ratingsTotal, review.ratingsCount, review.ratingsReviewCount, utils.formatDateYYYYMMDD(review.createDt)]
+        let length = shopInfoList.length + 1;
+        let columns = [amazon_shop_info.ExcelHeadersReviewSimple];
+        for (let i = 1; i < length; i++) {
+          let review = shopInfoList[i - 1].review;
+          columns[i] = [review.asin, review.sellersRankBig, review.sellersRankSmall, review.ratingsTotal, review.ratingsCount, review.ratingsReviewCount, utils.formatDateYYYYMMDD(review.createDt)]
         }
         //导出excel
-        var conf = {};
-        conf.cols = amazon_shop_info.ExcelHeadersReview;
-        conf.name = 'sheet1';
-        conf.rows = columns;
-        var r = excel.execute(conf);
-        var mailAttachment = new mailer.MailAttachment(`排名-${utils.formatDateYYYYMMDD(new Date())}.xlsx`, Buffer.from(r));
-        await mailer.send(new mailer.MailBody(`18207307296@163.com`, "第二份测试邮件", "测试内容哦", [mailAttachment]));
+        /* Create a simple workbook and write XLSX to buffer */
+        let ws = xlsx.utils.aoa_to_sheet(columns);
+        let wb = xlsx.utils.book_new();
+        xlsx.utils.book_append_sheet(wb, ws, "sheet1");
+        let body = xlsx.write(wb, {type: "buffer", bookType: "xlsx"});
+        let mailAttachment = new mailer.MailAttachment(`排名-${utils.formatDateYYYYMMDD(new Date())}.xlsx`, Buffer.from(body));
+        await mailer.send(new mailer.MailBody(env.getValue('EMAIL_TO'), "排名", "这里有一串文本", [mailAttachment]));
       }
 
       await delay(2000);

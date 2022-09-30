@@ -59,15 +59,7 @@ class ShopInfo {
 }
 
 //excel headers
-export const ExcelHeadersReview: Object[] = [
-    {caption: "asin", type: "string"},
-    {caption: "大排名", type: "string"},
-    {caption: "小排名", type: "string"},
-    {caption: "总评分", type: "string"},
-    {caption: "评分数", type: "string"},
-    {caption: "评分评论数", type: "string"},
-    {caption: "日期", type: "string"},
-];
+export const ExcelHeadersReviewSimple: string[] = ["asin", "大排名", "小排名", "总评分", "评分数", "评分评论数", "日期"];
 
 class ShopReviewInfo {
     asin: string;
