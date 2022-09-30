@@ -2,8 +2,7 @@
  * WechatBot
  *  - https://github.com/jianHjj/myWechatBot
  */
-import Env from './utils/env';
-
+const env = require('./utils/env');
 const {WechatyBuilder} = require('wechaty');
 const schedule = require('node-schedule');
 const config = require('./config/index');
@@ -13,7 +12,6 @@ const amazon_shop_info = require('./superagent/amazon_shop_info');
 const converterCn = require("nzh/cn");
 const mailer = require("./utils/emailer");
 const xlsx = require("xlsx");
-const env = new Env();
 
 // 延时函数，防止检测出类似机器人行为操作
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
