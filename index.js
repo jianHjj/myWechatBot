@@ -2,7 +2,7 @@
  * WechatBot
  *  - https://github.com/jianHjj/myWechatBot
  */
-const env = require('./utils/env');
+require("./web/amazon_controller");
 const {WechatyBuilder} = require('wechaty');
 const schedule = require('node-schedule');
 const config = require('./config/index');
@@ -10,8 +10,6 @@ const utils = require('./utils/index');
 const superagent = require('./superagent/index');
 const amazon_shop_info = require('./superagent/amazon_shop_info');
 const converterCn = require("nzh/cn");
-const mailer = require("./utils/emailer");
-const xlsx = require("xlsx");
 
 // 延时函数，防止检测出类似机器人行为操作
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -72,31 +70,13 @@ async function onMessage(msg) {
       let sendEmail = content.substr(0, 2) === '=@';
       //删除第一个值
       asinList = asinList.slice(1, asinList.length + 1);
-      var shopInfoList = await amazon_shop_info.getShopInfo(asinList);
+      var shopInfoList = await amazon_shop_info.getShopInfo(asinList, sendEmail);
       var firstInfoList = [];
       for (let i = 0; i < shopInfoList.length; i++) {
         var shopInfo = shopInfoList[i];
         if (shopInfo) {
           firstInfoList[i] = '=' + shopInfo.first;
         }
-      }
-
-      if (sendEmail) {
-        //发送邮件
-        let length = shopInfoList.length + 1;
-        let columns = [amazon_shop_info.ExcelHeadersReviewSimple];
-        for (let i = 1; i < length; i++) {
-          let review = shopInfoList[i - 1].review;
-          columns[i] = [review.asin, review.sellersRankBig, review.sellersRankSmall, review.ratingsTotal, review.ratingsCount, review.ratingsReviewCount, utils.formatDateYYYYMMDD(review.createDt)]
-        }
-        //导出excel
-        /* Create a simple workbook and write XLSX to buffer */
-        let ws = xlsx.utils.aoa_to_sheet(columns);
-        let wb = xlsx.utils.book_new();
-        xlsx.utils.book_append_sheet(wb, ws, "sheet1");
-        let body = xlsx.write(wb, {type: "buffer", bookType: "xlsx"});
-        let mailAttachment = new mailer.MailAttachment(`排名-${utils.formatDateYYYYMMDD(new Date())}.xlsx`, Buffer.from(body));
-        await mailer.send(new mailer.MailBody(env.getValue('EMAIL_TO'), "排名", "这里有一串文本", [mailAttachment]));
       }
 
       await delay(2000);

@@ -3,6 +3,9 @@ import {Decimal} from "@prisma/client/runtime";
 const superagent = require('./superagent');
 const utils = require('../utils/index');
 const tc = require('../utils/type_converter');
+const mailer = require("../utils/emailer");
+const xlsx = require("xlsx");
+const env = require('../utils/env');
 
 import cheerio, {Cheerio} from 'cheerio';
 import {PrismaClient} from "@prisma/client";
@@ -17,7 +20,7 @@ const url_shop_review: string = 'https://www.amazon.com/Computer-Desk-inches-Wri
 // 延时函数，防止检测出类似机器人行为操作
 const delay = (ms: any) => new Promise((resolve) => setTimeout(resolve, ms));
 
-class ShopInfo {
+export class ShopInfo {
     asin: string;
     first: string;
     basisPrice: string;
@@ -55,6 +58,10 @@ class ShopInfo {
         if (fromDB) {
             this.fromDB = fromDB;
         }
+    }
+
+    async sendEmail(shopInfoList: ShopInfo[] | undefined[]): Promise<void> {
+        await sendEmail(shopInfoList);
     }
 }
 
@@ -129,8 +136,12 @@ function getCouponPrice(offsetPrice: Decimal, coupon: Decimal, couponUnit: strin
     return '';
 }
 
-//获取商品信息
-export async function getShopInfo(asinList: string[]): Promise<ShopInfo[] | undefined[]> {
+/**
+ * 获取商品信息
+ * @param asinList asin编码列表
+ * @param se 是否发送邮件
+ */
+export async function getShopInfo(asinList: string[], se: boolean): Promise<ShopInfo[] | undefined[]> {
     // 获取商品信息
     let result: ShopInfo[] | undefined[] = [];
     var i: number;
@@ -223,7 +234,45 @@ export async function getShopInfo(asinList: string[]): Promise<ShopInfo[] | unde
             }
         }
     }
+    if (se) {
+        await sendEmail(result);
+    }
     return result;
+}
+
+async function sendEmail(shopInfoList: ShopInfo[] | undefined[]): Promise<void> {
+    if (!shopInfoList) {
+        return;
+    }
+    //发送邮件
+    let length = shopInfoList.length + 1;
+    let columns = [ExcelHeadersReviewSimple];
+    for (let i = 1; i < length; i++) {
+        var item = shopInfoList[i - 1];
+        if (!item) {
+            continue;
+        }
+        let review = item.review;
+        columns[i] = review ? [review.asin, review.sellersRankBig, review.sellersRankSmall, review.ratingsTotal, review.ratingsCount, review.ratingsReviewCount, utils.formatDateYYYYMMDD(review.createDt)] : [];
+    }
+    //导出excel
+    /* Create a simple workbook and write XLSX to buffer */
+    let ws = xlsx.utils.aoa_to_sheet(columns);
+    let wb = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(wb, ws, "sheet1");
+    let body = xlsx.write(wb, {type: "buffer", bookType: "xlsx"});
+    let mailAttachment = new mailer.MailAttachment(`排名-${utils.formatDateYYYYMMDD(new Date())}.xlsx`, Buffer.from(body));
+
+    //文本内容
+    var firstInfoList = [];
+    for (let i = 0; i < shopInfoList.length; i++) {
+        var shopInfo = shopInfoList[i];
+        if (shopInfo) {
+            firstInfoList[i] = '=' + shopInfo.first;
+        }
+    }
+    let text: string = firstInfoList.join("\n");
+    await mailer.send(new mailer.MailBody(env.getValue('EMAIL_TO'), "排名 & 价格", text, [mailAttachment]));
 }
 
 /*美元符号*/
