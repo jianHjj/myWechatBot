@@ -56,7 +56,7 @@ function unknownMethodHandler(req: any, res: any): any {
 
         return res.send(204);
     } else
-        return res.send(new restify.MethodNotAllowedError());
+        return res.send(500,"该方法不被允许");
 }
 
 server.on('MethodNotAllowed', unknownMethodHandler);
