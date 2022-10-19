@@ -82,6 +82,6 @@ server.post('/amazon/getPriceByAsin', async (req: any, res: any, next: any): Pro
     return next();
 })
 
-server.listen(3001, '127.0.0.1', function (): void {
+server.listen(3001, function (): void {
     console.log('%s listening at %s', server.name, server.url)
 });
