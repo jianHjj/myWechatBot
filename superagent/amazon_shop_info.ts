@@ -66,7 +66,7 @@ export class ShopInfo {
 }
 
 //excel headers
-export const ExcelHeadersReviewSimple: string[] = ["asin", "大排名", "小排名", "总评分", "评分数", "评分评论数", "日期"];
+export const ExcelHeadersReviewSimple: string[] = ["asin", "小排名", "大排名", "总评分", "评分数", "评分评论数", "日期"];
 
 class ShopReviewInfo {
     asin: string;
@@ -253,7 +253,7 @@ async function sendEmail(shopInfoList: ShopInfo[] | undefined[]): Promise<void> 
             continue;
         }
         let review = item.review;
-        columns[i] = review ? [review.asin, review.sellersRankBig, review.sellersRankSmall, review.ratingsTotal, review.ratingsCount, review.ratingsReviewCount, utils.formatDateYYYYMMDD(review.createDt)] : [];
+        columns[i] = review ? [review.asin, review.sellersRankSmall, review.sellersRankBig, review.ratingsTotal, review.ratingsCount, review.ratingsReviewCount, utils.formatDateYYYYMMDD(review.createDt)] : [];
     }
     //导出excel
     /* Create a simple workbook and write XLSX to buffer */
