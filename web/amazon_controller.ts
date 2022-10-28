@@ -1,43 +1,57 @@
 import {ShopInfo} from "../superagent/amazon_shop_info";
-const corsMiddleware = require('restify-cors-middleware2');
 
 const restify = require('restify');
 const amazon_shop_info = require('../superagent/amazon_shop_info');
 const server = restify.createServer();
 const env = require('../utils/env');
-
-//跨域中间件配置
-const cors = corsMiddleware({
-    preflightMaxAge: 5,
-    origins: ['*'],
-    allowHeaders: [
-        'X-App-Version',
-        'Accept',
-        'Accept-Version',
-        'Content-Type',
-        'Api-Version',
-        'Origin',
-        'X-Requested-With',
-        'Authorization',
-    ],
-    exposeHeaders: [],
-    credentials: true,
-    allowCredentialsAllOrigins: true,
-});
+const constants = require('./constants.js');
 
 // 去除请求网址中的多个 /
 server.pre(restify.plugins.pre.dedupeSlashes());
-server.pre(cors.preflight);
+server.pre((req: any, res: any, next: any) => {
+    let allowedHeaders: string[] = constants.ALLOW_HEADERS;
+    // 6.2.7
+    res.setHeader(constants.AC_ALLOW_ORIGIN, '*')
+    res.setHeader(constants.AC_ALLOW_CREDS, true)
+
+    // 6.2.8
+    res.setHeader(constants.AC_MAX_AGE, 5)
+
+    // 6.2.9
+    res.setHeader(constants.AC_ALLOW_METHODS, 'GET,POST,PUT,OPTIONS')
+
+    // 6.2.10
+    res.setHeader(constants.AC_ALLOW_HEADERS, allowedHeaders.join(','))
+
+    if (req.method !== 'OPTIONS') {
+        return next();
+    }
+
+    res.send(constants.HTTP_NO_CONTENT)
+});
 
 server.pre((req: any, res: any, next: any): any => {
     let pwd: string | undefined = req.headers.authorization;
     if (pwd === env.getValue("PWD")) {
         return next();
     }
-    res.send(500, "密码错误");
+    res.send(200, "密码错误");
 });
 
-server.use(cors.actual);
+server.use((req: any, res: any, next: any) => {
+    var originHeader = req.headers.origin
+
+    // Since we use the origin header to control what we return, that
+    // means we vary on origin
+    res.setHeader(constants.STR_VARY, constants.STR_VARY_DETAILS)
+
+    // if match was found, let's set some headers.
+    res.setHeader(constants.AC_ALLOW_ORIGIN, originHeader)
+    res.setHeader(constants.AC_ALLOW_CREDS, 'true')
+    res.setHeader(constants.AC_EXPOSE_HEADERS, [].join(','))
+
+    return next()
+});
 server.use(restify.plugins.queryParser());
 server.use(restify.plugins.bodyParser());
 server.use(restify.plugins.fullResponse())
@@ -57,7 +71,7 @@ function unknownMethodHandler(req: any, res: any): any {
 
         return res.send(204);
     } else
-        return res.send(500,"该方法不被允许");
+        return res.send(500, "该方法不被允许");
 }
 
 server.on('MethodNotAllowed', unknownMethodHandler);
@@ -66,7 +80,7 @@ server.post('/amazon/getPriceByAsin', async (req: any, res: any, next: any): Pro
     let asinList: Array<string> | undefined = req.body.asin;
     let sendEmail: boolean | undefined = req.body.sendEmail;
     if (!asinList) {
-        res.send(500, "asin不能为空，请输入asin");
+        res.send(200, "asin不能为空，请输入asin");
         return next();
     }
     if (asinList.length > 1) {
@@ -78,6 +92,8 @@ server.post('/amazon/getPriceByAsin', async (req: any, res: any, next: any): Pro
     var shopInfo: ShopInfo | undefined = shopInfoList[0];
     if (shopInfo) {
         res.send("=" + shopInfo.first);
+    } else {
+        res.send(200, "获取商品信息出错，请检查asin是否正确");
     }
     return next();
 })
