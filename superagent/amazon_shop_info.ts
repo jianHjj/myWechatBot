@@ -29,6 +29,7 @@ export class ShopInfo {
     coupon: number;
     couponUnit: string;
     deliveryPrice: string;
+    remark: string;
     createDt: Date;
     lastUpdateDt: Date;
     review: ShopReviewInfo | undefined;
@@ -44,6 +45,7 @@ export class ShopInfo {
                 coupon: number,
                 couponUnit: string,
                 deliveryPrice: string,
+                remark: string,
                 fromDB?: boolean) {
         this.asin = asin;
         this.first = first;
@@ -53,6 +55,7 @@ export class ShopInfo {
         this.coupon = coupon;
         this.couponUnit = couponUnit;
         this.deliveryPrice = deliveryPrice;
+        this.remark = remark;
         this.createDt = new Date();
         this.lastUpdateDt = new Date();
         if (fromDB) {
@@ -161,13 +164,15 @@ export async function getShopInfo(asinList: string[], se: boolean): Promise<Shop
 
                 //拼接微信信息
                 let first: string = concatDeliveryPrice(concatCouponPrice(offsetPrice, couponPrice), deliveryPrice);
-                result[i] = new ShopInfo(goods.asin, first,
+                result[i] = new ShopInfo(goods.asin,
+                    first,
                     tc.number2string(goods.basis_price),
                     offset.toFixed(2),
                     tc.number2string(goods.offset_price),
                     tc.number2string(goods.coupon),
                     goods.coupon_unit,
-                    deliveryPrice);
+                    deliveryPrice,
+                    goods.remark);
                 var r_item = result[i];
                 const r = await getGoodReview(asin, new Date());
                 if (r && r_item) {
@@ -206,7 +211,8 @@ export async function getShopInfo(asinList: string[], se: boolean): Promise<Shop
                     offset_price: e.offsetPrice === '' ? 0 : e.offsetPrice,
                     delivery_price: e.deliveryPrice === '' ? 0 : e.deliveryPrice,
                     coupon: e.coupon,
-                    coupon_unit: e.couponUnit
+                    coupon_unit: e.couponUnit,
+                    remark: e.remark
                 },
             });
 
@@ -240,6 +246,9 @@ export async function getShopInfo(asinList: string[], se: boolean): Promise<Shop
     return result;
 }
 
+//断货的备注
+const OUT_OF_STOCK = '断货';
+
 async function sendEmail(shopInfoList: ShopInfo[] | undefined[]): Promise<void> {
     if (!shopInfoList) {
         return;
@@ -268,7 +277,7 @@ async function sendEmail(shopInfoList: ShopInfo[] | undefined[]): Promise<void> 
     for (let i = 0; i < shopInfoList.length; i++) {
         var shopInfo = shopInfoList[i];
         if (shopInfo) {
-            firstInfoList[i] = '=' + shopInfo.first;
+            firstInfoList[i] = OUT_OF_STOCK === shopInfo.remark ? shopInfo.remark : '=' + shopInfo.first;
         }
     }
     let text: string = firstInfoList.join("\n");
@@ -281,6 +290,7 @@ const CHAR_DOLLAR: string = '$';
 const CHAR_PERCENT: string = '%';
 /*排名 talbe->th 内容*/
 const RANK_DESC: string = 'Best Sellers Rank';
+const ASIN: string = 'ASIN';
 
 //拼接优惠券信息
 function concatCouponPrice(s: string, couponPrice: string | any) {
@@ -386,7 +396,7 @@ async function reqShopInfo(asin: string): Promise<ShopInfo | undefined> {
 
             //拼接微信返回信息
             let first: string = concatDeliveryPrice(concatCouponPrice(offsetPrice, couponPrice), deliveryPrice);
-            shopInfo = new ShopInfo(asin, first, basisPrice, offset + '', offsetPrice, coupon, couponUnit, deliveryPrice);
+            shopInfo = new ShopInfo(asin, first, basisPrice, offset + '', offsetPrice, coupon, couponUnit, deliveryPrice, first);
         }
 
         //获取review信息
@@ -403,7 +413,7 @@ async function reqShopInfo(asin: string): Promise<ShopInfo | undefined> {
         let topBig = "";
         let topSmall = "";
         for (let i = 0; i < tableLength; i++) {
-            var th = thArray.eq(i).text();
+            let th: string = thArray.eq(i).text();
             if (th.includes(RANK_DESC)) {
                 //从商品详情中抽取排名
                 var topList = tdArray.eq(i).text().replace(',', '').split("#");
@@ -424,6 +434,14 @@ async function reqShopInfo(asin: string): Promise<ShopInfo | undefined> {
                     }
                 }
                 break;
+            }
+
+            if (th.includes(ASIN)) {
+                let asin_code: string = tdArray.eq(i).text().trim();
+                if (asin !== asin_code && shopInfo) {
+                    shopInfo.first = OUT_OF_STOCK;
+                    shopInfo.remark = shopInfo.first;
+                }
             }
         }
 
