@@ -172,7 +172,7 @@ export async function getShopInfo(asinList: string[], se: boolean): Promise<Shop
                     tc.number2string(goods.coupon),
                     goods.coupon_unit,
                     deliveryPrice,
-                    goods.remark);
+                    goods.remark ? goods.remark : '');
                 var r_item = result[i];
                 const r = await getGoodReview(asin, new Date());
                 if (r && r_item) {
