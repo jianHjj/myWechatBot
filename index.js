@@ -233,11 +233,11 @@ bot.on('login', onLogin);
 bot.on('logout', onLogout);
 bot.on('message', onMessage);
 
-// bot
-//     .start()
-//     .then(() => {
-//       console.log('开始登陆微信');
-//       // 登陆后创建定时任务
-//       initTestTask();
-//     })
-//     .catch((e) => console.error(e));
+bot
+    .start()
+    .then(() => {
+      console.log('开始登陆微信');
+      // 登陆后创建定时任务
+      initTestTask();
+    })
+    .catch((e) => console.error(e));

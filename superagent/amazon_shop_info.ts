@@ -416,7 +416,7 @@ async function reqShopInfo(asin: string): Promise<ShopInfo | undefined> {
             let th: string = thArray.eq(i).text();
             if (th.includes(RANK_DESC)) {
                 //从商品详情中抽取排名
-                var topList = tdArray.eq(i).text().replace(',', '').split("#");
+                var topList = tdArray.eq(i).text().replace(/(,)/g, '').split("#");
 
                 var t1 = topList[1];
                 if (t1) {
