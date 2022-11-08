@@ -416,20 +416,25 @@ async function reqShopInfo(asin: string): Promise<ShopInfo | undefined> {
             let th: string = thArray.eq(i).text();
             if (th.includes(RANK_DESC)) {
                 //从商品详情中抽取排名
-                let topList: string[] = tdArray.eq(i).text().replace(/(,)/g, '').split("#");
-                for (let topStr of topList) {
-                    if (topStr.includes('Office Products')) {
-                        let topBigMatch: RegExpMatchArray | null = topStr.trim().match(new RegExp('^\\d*'));
-                        if (topBigMatch) {
-                            topBig = topBigMatch[0].trim();
-                            continue;
-                        }
+                var topList = tdArray.eq(i).text().replace(/(,)/g, '').split("#");
+                let topSmallIndex: number = 2;
+                if (topList.length === 4) {
+                    //出现三排
+                    topSmallIndex = 3;
+                }
+                var t1 = topList[1];
+                if (t1) {
+                    var topBigMatch = t1.trim().match(new RegExp('^\\d*'));
+                    if (topBigMatch) {
+                        topBig = topBigMatch[0].trim();
                     }
-                    if (topStr.includes('Home Office Desks')) {
-                        let topSmallMatch: RegExpMatchArray | null = topStr.trim().match(new RegExp('^\\d*'));
-                        if (topSmallMatch) {
-                            topSmall = topSmallMatch[0].trim();
-                        }
+                }
+
+                var t2 = topList[topSmallIndex];
+                if (t2) {
+                    var topSmallMatch = t2.trim().match(new RegExp('^\\d*'));
+                    if (topSmallMatch) {
+                        topSmall = topSmallMatch[0].trim();
                     }
                 }
                 continue;
