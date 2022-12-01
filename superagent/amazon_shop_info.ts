@@ -196,13 +196,6 @@ export async function getShopInfo(asinList: string[], se: boolean): Promise<Shop
     for (let e of result) {
         if (e && !e.fromDB) {
             //保存result
-            const goods = await getGoods(e.asin, e.createDt);
-
-            if (goods) {
-                //存在商品信息跳过insert
-                continue;
-            }
-
             const created = await prisma.amazon_goods_price.create({
                 data: {
                     asin: e.asin,
@@ -215,13 +208,6 @@ export async function getShopInfo(asinList: string[], se: boolean): Promise<Shop
                     remark: e.remark
                 },
             });
-
-            const goodReview = await getGoodReview(e.asin, e.createDt);
-
-            if (goodReview) {
-                //存在商品review信息跳过insert
-                continue;
-            }
 
             var reviewTmp = e.review;
 
