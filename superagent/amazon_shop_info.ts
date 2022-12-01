@@ -153,37 +153,37 @@ export async function getShopInfo(asinList: string[], se: boolean): Promise<Shop
         let asin = asinList[i];
         if (asin) {
             asin = asin.trim();
-            const goods = await getGoods(asin, new Date());
-            if (goods) {
-                //已经爬取到商品信息，直接返回数据
-
-                let offset = goods.basis_price.toNumber() - goods.offset_price.toNumber();
-                let couponPrice: string = getCouponPrice(goods.offset_price, goods.coupon, goods.coupon_unit);
-                var offsetPrice = goods.offset_price.toNumber().toFixed(2);
-                var deliveryPrice = tc.number2string(goods.delivery_price);
-
-                //拼接微信信息
-                let first: string = concatDeliveryPrice(concatCouponPrice(offsetPrice, couponPrice), deliveryPrice);
-                result[i] = new ShopInfo(goods.asin,
-                    first,
-                    tc.number2string(goods.basis_price),
-                    offset.toFixed(2),
-                    tc.number2string(goods.offset_price),
-                    tc.number2string(goods.coupon),
-                    goods.coupon_unit,
-                    deliveryPrice,
-                    goods.remark ? goods.remark : '');
-                var r_item = result[i];
-                const r = await getGoodReview(asin, new Date());
-                if (r && r_item) {
-                    //存在review信息
-                    r_item.review = new ShopReviewInfo(r.asin, tc.number2string(r.sellers_rank_big), tc.number2string(r.sellers_rank_small), tc.number2string(r.ratings_total), tc.number2string(r.ratings_count), tc.number2string(r.ratings_review_count));
-                    //如果商品信息都已经存在才不需要重新爬取
-                    r_item.fromDB = true;
-                    continue;
-                }
-            }
-            await delay(2000);
+            // const goods = await getGoods(asin, new Date());
+            // if (goods) {
+            //     //已经爬取到商品信息，直接返回数据
+            //
+            //     let offset = goods.basis_price.toNumber() - goods.offset_price.toNumber();
+            //     let couponPrice: string = getCouponPrice(goods.offset_price, goods.coupon, goods.coupon_unit);
+            //     var offsetPrice = goods.offset_price.toNumber().toFixed(2);
+            //     var deliveryPrice = tc.number2string(goods.delivery_price);
+            //
+            //     //拼接微信信息
+            //     let first: string = concatDeliveryPrice(concatCouponPrice(offsetPrice, couponPrice), deliveryPrice);
+            //     result[i] = new ShopInfo(goods.asin,
+            //         first,
+            //         tc.number2string(goods.basis_price),
+            //         offset.toFixed(2),
+            //         tc.number2string(goods.offset_price),
+            //         tc.number2string(goods.coupon),
+            //         goods.coupon_unit,
+            //         deliveryPrice,
+            //         goods.remark ? goods.remark : '');
+            //     var r_item = result[i];
+            //     const r = await getGoodReview(asin, new Date());
+            //     if (r && r_item) {
+            //         //存在review信息
+            //         r_item.review = new ShopReviewInfo(r.asin, tc.number2string(r.sellers_rank_big), tc.number2string(r.sellers_rank_small), tc.number2string(r.ratings_total), tc.number2string(r.ratings_count), tc.number2string(r.ratings_review_count));
+            //         //如果商品信息都已经存在才不需要重新爬取
+            //         r_item.fromDB = true;
+            //         continue;
+            //     }
+            // }
+            // await delay(2000);
             result[i] = await reqShopInfo(asin);
             let e = result[i];
             if (e) {
