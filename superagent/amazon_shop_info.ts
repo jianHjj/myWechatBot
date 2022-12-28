@@ -216,11 +216,11 @@ export async function getShopInfo(asinList: string[], se: boolean): Promise<Shop
                     data: {
                         asin: reviewTmp.asin,
                         date: utils.formatDateYYYYMMDD(reviewTmp.createDt),
-                        sellers_rank_big: reviewTmp.sellersRankBig ? parseInt(reviewTmp.sellersRankBig) : undefined,
-                        sellers_rank_small: reviewTmp.sellersRankSmall ? parseInt(reviewTmp.sellersRankSmall) : undefined,
-                        ratings_total: reviewTmp.ratingsTotal,
-                        ratings_count: reviewTmp.ratingsCount ? parseInt(reviewTmp.ratingsCount) : undefined,
-                        ratings_review_count: reviewTmp.ratingsReviewCount ? parseInt(reviewTmp.ratingsReviewCount) : undefined
+                        sellers_rank_big: reviewTmp.sellersRankBig ? parseInt(reviewTmp.sellersRankBig) : 0,
+                        sellers_rank_small: reviewTmp.sellersRankSmall ? parseInt(reviewTmp.sellersRankSmall) : 0,
+                        ratings_total: reviewTmp.ratingsTotal ? parseInt(reviewTmp.ratingsTotal) : 0,
+                        ratings_count: reviewTmp.ratingsCount ? parseInt(reviewTmp.ratingsCount) : 0,
+                        ratings_review_count: reviewTmp.ratingsReviewCount ? parseInt(reviewTmp.ratingsReviewCount) : 0
                     },
                 });
             }
