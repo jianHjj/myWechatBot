@@ -49,12 +49,12 @@ export class ShopInfo {
                 fromDB?: boolean) {
         this.asin = asin;
         this.first = first;
-        this.basisPrice = basisPrice;
-        this.offset = offset;
-        this.offsetPrice = offsetPrice;
+        this.basisPrice = basisPrice.replace(',', '');
+        this.offset = offset.replace(',', '');
+        this.offsetPrice = offsetPrice.replace(',', '');
         this.coupon = coupon;
         this.couponUnit = couponUnit;
-        this.deliveryPrice = deliveryPrice;
+        this.deliveryPrice = deliveryPrice.replace(',', '');
         this.remark = remark;
         this.createDt = new Date();
         this.lastUpdateDt = new Date();
@@ -366,6 +366,11 @@ async function reqShopInfo(asin: string): Promise<ShopInfo | undefined> {
                     }
                 }
             }
+
+            //避免,号问题
+            basisPrice = basisPrice && basisPrice !== '' ? basisPrice.replace(',', '') : basisPrice;
+            offsetPrice = offsetPrice && offsetPrice !== '' ? offsetPrice.replace(',', '') : offsetPrice;
+
             let offset = parseInt(basisPrice) - parseInt(offsetPrice);
             var deliveryPriceAttr = $('#mir-layout-DELIVERY_BLOCK-slot-PRIMARY_DELIVERY_MESSAGE_LARGE').children()
                 .attr('data-csa-c-delivery-price');
