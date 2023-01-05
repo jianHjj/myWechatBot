@@ -183,7 +183,7 @@ export async function getShopInfo(asinList: string[], se: boolean): Promise<Shop
             //         continue;
             //     }
             // }
-            // await delay(2000);
+             await delay(2000);
             result[i] = await reqShopInfo(asin);
             let e = result[i];
             if (e) {
