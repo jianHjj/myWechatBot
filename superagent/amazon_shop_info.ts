@@ -462,9 +462,14 @@ async function reqShopReview(asin: string, review?: ShopReviewInfo | undefined):
         var url: string = url_shop_review.replace("{ASIN}", asin)
         let res = await superagent.req({url: url, method: 'GET', spider: true});
         let $ = cheerio.load(res);
-        let reviewCountMatch = $('#filter-info-section .a-row').text()
+
+        //获取评论数
+        let ratingsStr: any = $('#filter-info-section .a-row').text()
             .replace(new RegExp(',', 'g'), '')
-            .split("ratings")[1].match('\\b\\d*\\b');
+            .split("ratings")[1];
+
+        //避免空指针问题
+        let reviewCountMatch = ratingsStr ? ratingsStr.match('\\b\\d*\\b') : null;
         if (reviewCountMatch) {
             review.ratingsReviewCount = reviewCountMatch[0].trim();
         }
