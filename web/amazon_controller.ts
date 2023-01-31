@@ -1,7 +1,9 @@
 import {ShopInfo} from "../superagent/amazon_shop_info";
 
+
 const restify = require('restify');
 const amazon_shop_info = require('../superagent/amazon_shop_info');
+const amazon_best_sellers = require('../superagent/amazon_best_sellers');
 const server = restify.createServer();
 const env = require('../utils/env');
 const constants = require('./constants.js');
@@ -95,6 +97,13 @@ server.post('/amazon/getPriceByAsin', async (req: any, res: any, next: any): Pro
     } else {
         res.send(200, "获取商品信息出错，请检查asin是否正确");
     }
+    return next();
+})
+
+server.post('/amazon/getPriceByUrl', async (req: any, res: any, next: any): Promise<any> => {
+    let url: string | undefined = req.body.url;
+    amazon_best_sellers.getShopInfo(url, false);
+    res.send(200);
     return next();
 })
 
