@@ -99,27 +99,6 @@ class ShopReviewInfo {
     }
 }
 
-async function getGoods(asin: string, date: Date) {
-    return await prisma.amazon_goods_price.findUnique({
-        where: {
-            asin_date: {
-                asin: asin,
-                date: utils.formatDateYYYYMMDD(date),
-            },
-        },
-    });
-}
-
-async function getGoodReview(asin: string, date: Date) {
-    return await prisma.amazon_goods_review.findUnique({
-        where: {
-            asin_date: {
-                asin: asin,
-                date: utils.formatDateYYYYMMDD(date),
-            },
-        },
-    });
-}
 
 /**
  * 计算优惠价格并四舍五入取两位小数返回字符串，如果没有优惠返回空字符串
@@ -396,6 +375,7 @@ async function reqShopInfo(asin: string): Promise<ShopInfo | undefined> {
         var ratingsCount: string = $('#acrCustomerReviewText').eq(0).text()
             .replace('ratings', '')
             .replace(',', '').trim();
+
         //获取商品详情
         var table = $('#productDetails_detailBullets_sections1');
         let tdArray = table.find('td');
@@ -428,7 +408,7 @@ async function reqShopInfo(asin: string): Promise<ShopInfo | undefined> {
                         topSmall = topSmallMatch[0].trim();
                     }
                 }
-                continue;
+                break;
             }
 
             if (th.includes(ASIN)) {
@@ -436,6 +416,41 @@ async function reqShopInfo(asin: string): Promise<ShopInfo | undefined> {
                 if (asin !== asin_code && shopInfo) {
                     shopInfo.first = OUT_OF_STOCK;
                     shopInfo.remark = shopInfo.first;
+                }
+            }
+        }
+
+        //获取商品详情兼容情况-fixed
+        if ((!topBig || topBig === "") && (!topSmall || topSmall === "")) {
+            let detailList = $('#detailBulletsWrapper_feature_div');
+            let li = detailList.find('ul').find('li');
+            for (let i = 0; i < li.length; i++) {
+                let e = li.eq(i);
+                let attrName = e.find('span.a-list-item').find('span.a-text-bold').text()
+                if (attrName.includes(RANK_DESC)) {
+                    //从商品详情中抽取排名
+                    var topList_2 = e.text().replace(/(,)/g, '').split("#");
+                    let topSmallIndex: number = 2;
+                    if (topList_2.length === 4) {
+                        //出现三排
+                        topSmallIndex = 3;
+                    }
+                    var t1_2 = topList_2[1];
+                    if (t1_2) {
+                        var topBigMatch_2 = t1_2.trim().match(new RegExp('^\\d*'));
+                        if (topBigMatch_2) {
+                            topBig = topBigMatch_2[0].trim();
+                        }
+                    }
+
+                    var t2_2 = topList_2[topSmallIndex];
+                    if (t2_2) {
+                        var topSmallMatch_2 = t2_2.trim().match(new RegExp('^\\d*'));
+                        if (topSmallMatch_2) {
+                            topSmall = topSmallMatch_2[0].trim();
+                        }
+                    }
+                    break;
                 }
             }
         }
