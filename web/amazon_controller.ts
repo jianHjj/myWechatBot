@@ -102,7 +102,7 @@ server.post('/amazon/getPriceByAsin', async (req: any, res: any, next: any): Pro
 
 server.post('/amazon/getPriceByUrl', async (req: any, res: any, next: any): Promise<any> => {
     let url: string | undefined = req.body.url;
-    amazon_best_sellers.getShopInfo(url, false);
+    amazon_best_sellers.getShopInfo(url, true);
     res.send(200);
     return next();
 })
