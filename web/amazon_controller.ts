@@ -8,6 +8,9 @@ const server = restify.createServer();
 const env = require('../utils/env');
 const constants = require('./constants.js');
 
+//设置同步锁
+let lock: boolean = false;
+
 // 去除请求网址中的多个 /
 server.pre(restify.plugins.pre.dedupeSlashes());
 server.pre((req: any, res: any, next: any) => {
@@ -38,6 +41,13 @@ server.pre((req: any, res: any, next: any): any => {
         return next();
     }
     res.send(200, "密码错误");
+});
+
+server.pre((req: any, res: any, next: any): any => {
+    if (!lock) {
+        return next();
+    }
+    res.send(200, "系统繁忙，请稍后再试");
 });
 
 server.use((req: any, res: any, next: any) => {
@@ -79,31 +89,37 @@ function unknownMethodHandler(req: any, res: any): any {
 server.on('MethodNotAllowed', unknownMethodHandler);
 
 server.post('/amazon/getPriceByAsin', async (req: any, res: any, next: any): Promise<any> => {
-    let asinList: Array<string> | undefined = req.body.asin;
-    let sendEmail: boolean | undefined = req.body.sendEmail;
-    if (!asinList) {
-        res.send(200, "asin不能为空，请输入asin");
+    lock = true;
+    try {
+        let asinList: Array<string> | undefined = req.body.asin;
+        let sendEmail: boolean | undefined = req.body.sendEmail;
+        if (!asinList) {
+            res.send(200, "asin不能为空，请输入asin");
+            return next();
+        }
+        if (asinList.length > 1) {
+            amazon_shop_info.getShopInfo(asinList, true).then((r: any) => console.log("获取商品完毕，返回信息 ：" + r));
+            res.send("请稍等片刻，信息将会以邮件的形式发给您~");
+            return next();
+        }
+        let shopInfoList: ShopInfo[] | undefined[] = await amazon_shop_info.getShopInfo(asinList, sendEmail);
+        var shopInfo: ShopInfo | undefined = shopInfoList[0];
+        if (shopInfo) {
+            res.send("=" + shopInfo.first);
+        } else {
+            res.send(200, "获取商品信息出错，请检查asin是否正确");
+        }
         return next();
+    } finally {
+        lock = false;
     }
-    if (asinList.length > 1) {
-        amazon_shop_info.getShopInfo(asinList, true).then((r: any) => console.log("获取商品完毕，返回信息 ：" + r));
-        res.send("请稍等片刻，信息将会以邮件的形式发给您~");
-        return next();
-    }
-    let shopInfoList: ShopInfo[] | undefined[] = await amazon_shop_info.getShopInfo(asinList, sendEmail);
-    var shopInfo: ShopInfo | undefined = shopInfoList[0];
-    if (shopInfo) {
-        res.send("=" + shopInfo.first);
-    } else {
-        res.send(200, "获取商品信息出错，请检查asin是否正确");
-    }
-    return next();
 })
 
 server.post('/amazon/getPriceByUrl', async (req: any, res: any, next: any): Promise<any> => {
+    lock = true;
     let url: string | undefined = req.body.url;
-    amazon_best_sellers.getShopInfo(url, true);
-    res.send(200);
+    amazon_best_sellers.getShopInfo(url, true).then(r => lock = false);
+    res.send("请稍等片刻，信息将会以邮件的形式发给您~");
     return next();
 })
 

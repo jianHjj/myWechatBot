@@ -19,7 +19,7 @@ async function extractAsinObj(page: Page, url: string): Promise<string[]> {
         //每300毫秒滚动100px
         let timer: number | any = setInterval((): void => {
             console.log(window.scrollY);
-            window.scrollTo(0, top += 100)
+            window.scrollTo(0, top += 170)
         }, 200);
         //15秒后清除定时器并开始获取内容
         setTimeout((): void => {
