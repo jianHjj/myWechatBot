@@ -30,10 +30,13 @@ async function extractAsinObj(page: Page, url: string): Promise<string[]> {
     await page.waitForTimeout(12000);
 
     let evalResult = await page.evaluate(() => {
-        let asinList: string[] = [];
+        let asinList: any[] = [];
         let asinElements = document.querySelectorAll('div.p13n-sc-uncoverable-faceout')
         asinElements.forEach((asinEle: any) => {
-            asinList.push(asinEle.id);
+            asinList.push({
+                "asin": asinEle.id,
+                "url": asinEle.getElementsByClassName('a-link-normal')[0].href
+            });
         })
         return {"asins": asinList}
     });
@@ -59,13 +62,13 @@ async function start(url: string, se: boolean, hl: boolean) {
     })
 
     //链接网址
-    let asins_page1: string[] = await extractAsinObj(page, url);
+    let asins_page1: any[] = await extractAsinObj(page, url);
 
     //翻第二页
     url = url.replace('pg=1', 'pg=2').replace('zg_bs_pg_1', 'zg_bs_pg_2');
-    let asins_page2: string[] = await extractAsinObj(page, url);
+    let asins_page2: any[] = await extractAsinObj(page, url);
 
     let asins = [...asins_page1, ...asins_page2];
-
+    // asins = asins.slice(34, asins.length);
     await amazon_shop_info.getShopInfo(asins, se);
 }
