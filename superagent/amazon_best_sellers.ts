@@ -61,6 +61,9 @@ async function start(url: string, se: boolean, hl: boolean) {
         height: 1080,
     })
 
+    //不设置超时时间
+    await page.setDefaultNavigationTimeout(0);
+
     //链接网址
     let asins_page1: any[] = await extractAsinObj(page, url);
 

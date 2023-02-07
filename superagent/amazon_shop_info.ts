@@ -41,6 +41,8 @@ export class ShopInfo {
     brand: string;
     //商品链接
     url: string;
+    //封面URL地址
+    coverUrl: string;
 
     // 构造函数
     constructor(asin: string,
@@ -55,6 +57,7 @@ export class ShopInfo {
                 title: string,
                 brand: string,
                 url: string,
+                coverUrl: string,
                 fromDB?: boolean) {
         this.asin = asin;
         this.first = first;
@@ -68,6 +71,7 @@ export class ShopInfo {
         this.title = title;
         this.brand = brand;
         this.url = url;
+        this.coverUrl = coverUrl;
         this.createDt = new Date();
         this.lastUpdateDt = new Date();
         if (fromDB) {
@@ -81,7 +85,7 @@ export class ShopInfo {
 }
 
 //excel headers
-export const ExcelHeadersReviewSimple: string[] = ["asin", "标题", "品牌名", "价格", "小排名", "大排名", "总评分", "ratingsCount", "ratingsReviewCount", "日期", "商品链接"];
+export const ExcelHeadersReviewSimple: string[] = ["asin", "封面", "标题", "品牌名", "价格", "小排名", "大排名", "总评分", "ratingsCount", "ratingsReviewCount", "日期", "商品链接"];
 
 class ShopReviewInfo {
     asin: string;
@@ -225,7 +229,7 @@ async function sendEmail(shopInfoList: ShopInfo[] | undefined[]): Promise<void> 
             continue;
         }
         let review = item.review;
-        columns[i] = review ? [review.asin, item.title, item.brand, item.first, review.sellersRankSmall, review.sellersRankBig, review.ratingsTotal, review.ratingsCount, review.ratingsReviewCount, utils.formatDateYYYYMMDD(review.createDt), item.url] : [];
+        columns[i] = review ? [review.asin, item.coverUrl, item.title, item.brand, item.first, review.sellersRankSmall, review.sellersRankBig, review.ratingsTotal, review.ratingsCount, review.ratingsReviewCount, utils.formatDateYYYYMMDD(review.createDt), item.url] : [];
     }
     //导出excel
     /* Create a simple workbook and write XLSX to buffer */
@@ -384,9 +388,14 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
                 }
             }
             title = $('#productTitle').text().trim();
+
+            //获取封面
+            let coverImgDom = $('#imgTagWrapperId');
+            let coverImgUrl: string = coverImgDom.children().eq(0).attr('src');
+
             //拼接微信返回信息
             let first: string = concatDeliveryPrice(concatCouponPrice(offsetPrice, couponPrice), deliveryPrice);
-            shopInfo = new ShopInfo(asin, first, basisPrice, offset + '', offsetPrice, coupon, couponUnit, deliveryPrice, first, title, brand, url);
+            shopInfo = new ShopInfo(asin, first, basisPrice, offset + '', offsetPrice, coupon, couponUnit, deliveryPrice, first, title, brand, url, coverImgUrl);
         }
 
         //获取review信息
