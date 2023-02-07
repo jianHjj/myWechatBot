@@ -35,6 +35,10 @@ export class ShopInfo {
     review: ShopReviewInfo | undefined;
     //是否来自数据库 默认为false
     fromDB: boolean = false;
+    //标题
+    title: string;
+    //品牌名
+    brand: string;
 
     // 构造函数
     constructor(asin: string,
@@ -46,6 +50,8 @@ export class ShopInfo {
                 couponUnit: string,
                 deliveryPrice: string,
                 remark: string,
+                title: string,
+                brand: string,
                 fromDB?: boolean) {
         this.asin = asin;
         this.first = first;
@@ -56,6 +62,8 @@ export class ShopInfo {
         this.couponUnit = couponUnit;
         this.deliveryPrice = deliveryPrice.replace(',', '');
         this.remark = remark;
+        this.title = title;
+        this.brand = brand;
         this.createDt = new Date();
         this.lastUpdateDt = new Date();
         if (fromDB) {
@@ -69,7 +77,7 @@ export class ShopInfo {
 }
 
 //excel headers
-export const ExcelHeadersReviewSimple: string[] = ["asin", "小排名", "大排名", "总评分", "ratingsCount", "ratingsReviewCount", "日期"];
+export const ExcelHeadersReviewSimple: string[] = ["asin", "标题", "品牌名", "小排名", "大排名", "总评分", "ratingsCount", "ratingsReviewCount", "日期"];
 
 class ShopReviewInfo {
     asin: string;
@@ -162,7 +170,7 @@ export async function getShopInfo(asinList: string[], se: boolean): Promise<Shop
             //         continue;
             //     }
             // }
-             await delay(2000);
+            await delay(2000);
             result[i] = await reqShopInfo(asin);
             let e = result[i];
             if (e) {
@@ -184,7 +192,9 @@ export async function getShopInfo(asinList: string[], se: boolean): Promise<Shop
                     delivery_price: e.deliveryPrice === '' ? 0 : e.deliveryPrice,
                     coupon: e.coupon,
                     coupon_unit: e.couponUnit,
-                    remark: e.remark
+                    remark: e.remark,
+                    title: e.title,
+                    brand: e.brand
                 },
             });
 
@@ -227,7 +237,7 @@ async function sendEmail(shopInfoList: ShopInfo[] | undefined[]): Promise<void> 
             continue;
         }
         let review = item.review;
-        columns[i] = review ? [review.asin, review.sellersRankSmall, review.sellersRankBig, review.ratingsTotal, review.ratingsCount, review.ratingsReviewCount, utils.formatDateYYYYMMDD(review.createDt)] : [];
+        columns[i] = review ? [review.asin, item.title, item.brand, review.sellersRankSmall, review.sellersRankBig, review.ratingsTotal, review.ratingsCount, review.ratingsReviewCount, utils.formatDateYYYYMMDD(review.createDt)] : [];
     }
     //导出excel
     /* Create a simple workbook and write XLSX to buffer */
@@ -364,9 +374,23 @@ async function reqShopInfo(asin: string): Promise<ShopInfo | undefined> {
                 deliveryPrice = deliveryPriceMatch[0].trim();
             }
 
+            //获取标题、品牌名
+            let title, brand: string = '';
+            let microTable = $('.a-spacing-micro');
+            if (microTable) {
+                let microTrs = microTable.find('tr');
+                for (let i = 0; i < microTrs.length; i++) {
+                    let tr = microTrs.eq(i);
+                    if (tr.hasClass('po-brand')) {
+                        brand = tr.children().eq(1).text().trim();
+                        break;
+                    }
+                }
+            }
+            title = $('#productTitle').text().trim();
             //拼接微信返回信息
             let first: string = concatDeliveryPrice(concatCouponPrice(offsetPrice, couponPrice), deliveryPrice);
-            shopInfo = new ShopInfo(asin, first, basisPrice, offset + '', offsetPrice, coupon, couponUnit, deliveryPrice, first);
+            shopInfo = new ShopInfo(asin, first, basisPrice, offset + '', offsetPrice, coupon, couponUnit, deliveryPrice, first, title, brand);
         }
 
         //获取review信息
