@@ -32,7 +32,7 @@ async function extractAsinObj(page: Page, url: string): Promise<string[]> {
     let evalResult = await page.evaluate(() => {
         let asinList: string[] = [];
         let asinElements = document.querySelectorAll('div.p13n-sc-uncoverable-faceout')
-        asinElements.forEach(asinEle => {
+        asinElements.forEach((asinEle: any) => {
             asinList.push(asinEle.id);
         })
         return {"asins": asinList}
