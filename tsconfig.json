@@ -3,5 +3,11 @@
     "lib": [
       "dom"
     ]
-  }
+  },
+  "include": [
+    "superagent/**/*","utils/**/*","web/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

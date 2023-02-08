@@ -17,6 +17,7 @@
     "license": "ISC",
     "dependencies": {
         "@prisma/client": "^4.4.0",
+        "@types/node": "^18.13.0",
         "cheerio": "^1.0.0-rc.2",
         "date-chinese": "^2.1.4",
         "md5": "^2.2.1",
