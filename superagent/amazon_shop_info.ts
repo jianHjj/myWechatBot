@@ -391,7 +391,7 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
 
             //获取封面
             let coverImgDom = $('#imgTagWrapperId');
-            let coverImgUrl: string = coverImgDom.children().eq(0).attr('src');
+            let coverImgUrl: string = coverImgDom.children().eq(0).attr('data-old-hires');
 
             //拼接微信返回信息
             let first: string = concatDeliveryPrice(concatCouponPrice(offsetPrice, couponPrice), deliveryPrice);
