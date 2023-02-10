@@ -79,9 +79,6 @@ export class ShopInfo {
         }
     }
 
-    async sendEmail(shopInfoList: ShopInfo[] | undefined[]): Promise<void> {
-        await sendEmail(shopInfoList);
-    }
 }
 
 //excel headers

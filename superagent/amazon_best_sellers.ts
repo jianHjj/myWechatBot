@@ -24,10 +24,10 @@ async function extractAsinObj(page: Page, url: string): Promise<string[]> {
         //15秒后清除定时器并开始获取内容
         setTimeout((): void => {
             clearInterval(timer)
-        }, 12000);
+        }, 15000);
     });
 
-    await page.waitForTimeout(12000);
+    await page.waitForTimeout(15000);
 
     let evalResult = await page.evaluate(() => {
         let asinList: any[] = [];
@@ -72,6 +72,5 @@ async function start(url: string, se: boolean, hl: boolean) {
     let asins_page2: any[] = await extractAsinObj(page, url);
 
     let asins = [...asins_page1, ...asins_page2];
-    // asins = asins.slice(34, asins.length);
     await amazon_shop_info.getShopInfo(asins, se);
 }
