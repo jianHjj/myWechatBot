@@ -105,6 +105,10 @@ async function onMessage(msg) {
           // 天行对接的图灵聊
           reply = await superagent.getTXTLReply(content);
           console.log('天行对接的图灵机器人回复：', reply);
+        }else if (config.DEFAULTBOT === '3') {
+          // openai
+          reply = await superagent.getOpenAIReply(content);
+          console.log('openai对接的机器人回复：', reply);
         }
         try {
           await delay(2000);
@@ -115,19 +119,6 @@ async function onMessage(msg) {
       }
     }
   }
-}
-
-function initTestTask() {
-  console.log(`设定测试定时任务`);
-
-  //设置定时任务
-  config.testTask.forEach(task => {
-    console.log('测试定时任务已设定！');
-    schedule.scheduleJob(task.testDate, async () => {
-      console.log('测试定时任务开始工作啦');
-      console.log(task.testMsg);
-    });
-  });
 }
 
 async function sendMsg(str, contact) {
@@ -237,7 +228,5 @@ bot
     .start()
     .then(() => {
       console.log('开始登陆微信');
-      // 登陆后创建定时任务
-      initTestTask();
     })
     .catch((e) => console.error(e));
