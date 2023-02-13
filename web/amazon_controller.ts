@@ -102,6 +102,20 @@ server.post('/amazon/getPriceByAsin', async (req: any, res: any, next: any): Pro
             res.send("请稍等片刻，信息将会以邮件的形式发给您~");
             return next();
         }
+
+        //判断asin是否是url
+        let first :string | undefined = asinList.at(0);
+        if (first && first.startsWith("http")) {
+            if (!first.endsWith("pg=1")) {
+                res.send(200, "pg【页码】参数不能为空，请修改URL重新提交，" +
+                    "合法链接举例：https://www.amazon.com/Best-Sellers-Appliances-Ice-Makers/zgbs/appliances/2399939011/ref=zg_bs_pg_1?_encoding=UTF8&pg=1");
+                return next();
+            }
+            amazon_best_sellers.getShopInfo(first, true).then(r => lock = false);
+            res.send("请稍等片刻，信息将会以邮件的形式发给您~");
+            return next();
+        }
+
         let shopInfoList: ShopInfo[] | undefined[] = await amazon_shop_info.getShopInfo(asinList, sendEmail);
         var shopInfo: ShopInfo | undefined = shopInfoList[0];
         if (shopInfo) {
