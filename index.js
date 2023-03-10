@@ -9,6 +9,7 @@ const config = require('./config/index');
 const utils = require('./utils/index');
 const superagent = require('./superagent/index');
 const amazon_shop_info = require('./superagent/amazon_shop_info');
+const amazon_best_sellers = require('./superagent/amazon_best_sellers');
 const converterCn = require("nzh/cn");
 
 // 延时函数，防止检测出类似机器人行为操作
@@ -105,7 +106,7 @@ async function onMessage(msg) {
           // 天行对接的图灵聊
           reply = await superagent.getTXTLReply(content);
           console.log('天行对接的图灵机器人回复：', reply);
-        }else if (config.DEFAULTBOT === '3') {
+        } else if (config.DEFAULTBOT === '3') {
           // openai
           reply = await superagent.getOpenAIReply(content);
           console.log('openai对接的机器人回复：', reply);
@@ -224,9 +225,25 @@ bot.on('login', onLogin);
 bot.on('logout', onLogout);
 bot.on('message', onMessage);
 
-bot
-    .start()
-    .then(() => {
-      console.log('开始登陆微信');
-    })
-    .catch((e) => console.error(e));
+// bot
+//     .start()
+//     .then(() => {
+//       console.log('开始登陆微信');
+//     })
+//     .catch((e) => console.error(e));
+
+console.log('你的亚马逊工具定时任务在初始化了！');
+//设定亚马逊爬虫任务
+schedule.scheduleJob(config.amazonTask.dateTime, async () => {
+  console.log('你的亚马逊工具开始工作啦！');
+  for (let asins of config.amazonTask.asins) {
+    await amazon_shop_info.getShopInfo(asins, true);
+    await delay(10000);
+  }
+  for (let url of config.amazonTask.urls) {
+    await amazon_best_sellers.getShopInfo(url, true);
+    await delay(10000);
+  }
+});
+
+console.log('你的亚马逊工具定时任务初始化完成！');
