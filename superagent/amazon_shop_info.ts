@@ -254,6 +254,10 @@ const CHAR_DOLLAR: string = '$';
 const CHAR_PERCENT: string = '%';
 /*排名 talbe->th 内容*/
 const RANK_DESC: string = 'Best Sellers Rank';
+/*桌子类商品的小排名*/
+const HOME_OFFICE_DESKS: string = 'Home Office Desks';
+/*花园软管卷盘小排名*/
+const GARDEN_HOSE_REELS: string = 'Garden Hose Reels';
 const ASIN: string = 'ASIN';
 
 //拼接优惠券信息
@@ -415,23 +419,46 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
                 //从商品详情中抽取排名
                 var topList = tdArray.eq(i).text().replace(/(,)/g, '').split("#");
                 let topSmallIndex: number = 2;
+                let topSmallMatch: RegExpMatchArray | null;
+
+                //按照英文描述匹配小排名
+                if ((!topSmall || topSmall === "")) {
+                    for (let topEle of topList) {
+                        if (topEle.includes(GARDEN_HOSE_REELS)) {
+                            topSmallMatch = topEle.trim().match(new RegExp('^\\d*'));
+                            if (topSmallMatch) {
+                                topSmall = topSmallMatch[0].trim();
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                //按照出现顺序赋值大小排名
                 if (topList.length === 4) {
                     //出现三排
                     topSmallIndex = 3;
                 }
-                var t1 = topList[1];
-                if (t1) {
-                    var topBigMatch = t1.trim().match(new RegExp('^\\d*'));
-                    if (topBigMatch) {
-                        topBig = topBigMatch[0].trim();
+
+                //大排名
+                if ((!topBig || topBig === "")) {
+                    var t1 = topList[1];
+                    if (t1) {
+                        var topBigMatch = t1.trim().match(new RegExp('^\\d*'));
+                        if (topBigMatch) {
+                            topBig = topBigMatch[0].trim();
+                        }
                     }
                 }
 
-                var t2 = topList[topSmallIndex];
-                if (t2) {
-                    var topSmallMatch = t2.trim().match(new RegExp('^\\d*'));
-                    if (topSmallMatch) {
-                        topSmall = topSmallMatch[0].trim();
+                //小排名
+                if ((!topSmall || topSmall === "")) {
+                    var t2 = topList[topSmallIndex];
+                    if (t2) {
+                        topSmallMatch = t2.trim().match(new RegExp('^\\d*'));
+                        if (topSmallMatch) {
+                            topSmall = topSmallMatch[0].trim();
+                        }
                     }
                 }
                 break;

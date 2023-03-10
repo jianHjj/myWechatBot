@@ -71,6 +71,9 @@ async function start(url: string, se: boolean, hl: boolean) {
     url = url.replace('pg=1', 'pg=2').replace('zg_bs_pg_1', 'zg_bs_pg_2');
     let asins_page2: any[] = await extractAsinObj(page, url);
 
+    //关闭浏览器
+    browers.close();
     let asins = [...asins_page1, ...asins_page2];
+    asins = asins.slice(0, 5);
     await amazon_shop_info.getShopInfo(asins, se);
 }
