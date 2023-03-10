@@ -30,7 +30,11 @@ module.exports = {
     ],
     urls: [
       "https://www.amazon.com/Best-Sellers-Office-Products-Managerial-Chairs-Executive-Chairs/zgbs/office-products/1069132/ref=zg_bs_pg_1?_encoding=UTF8&pg=1",
-      "https://www.amazon.com/Best-Sellers-Home-Kitchen-Home-Office-Desks/zgbs/home-garden/3733671/ref=zg_bs_pg_1?_encoding=UTF8&pg=1"
+      "https://www.amazon.com/Best-Sellers-Home-Kitchen-Home-Office-Desks/zgbs/home-garden/3733671/ref=zg_bs_pg_1?_encoding=UTF8&pg=1",
+      "https://www.amazon.com/Best-Sellers-Patio-Lawn-Garden-Garden-Hose-Reels/zgbs/lawn-garden/3480704011/ref=zg_bs_pg_1?_encoding=UTF8&pg=1",
+      "https://www.amazon.com/Best-Sellers-Tools-Home-Improvement-Ceiling-Fans/zgbs/hi/404433011/ref=zg_bs_pg_1?_encoding=UTF8&pg=1",
+      "https://www.amazon.com/Best-Sellers-Patio-Lawn-Garden-Greenhouses/zgbs/lawn-garden/11055931/ref=zg_bs_pg_1?_encoding=UTF8&pg=1",
+      "https://www.amazon.com/Best-Sellers-Home-Kitchen-Barstools/zgbs/home-garden/3733851/ref=zg_bs_pg_1?_encoding=UTF8&pg=1"
     ],
     dateTime: {tz: 'Asia/Shanghai', rule: '1 10 8 * * *'}
   },
