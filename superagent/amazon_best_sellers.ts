@@ -72,8 +72,7 @@ async function start(url: string, se: boolean, hl: boolean) {
     let asins_page2: any[] = await extractAsinObj(page, url);
 
     //关闭浏览器
-    browers.close();
+    await browers.close();
     let asins = [...asins_page1, ...asins_page2];
-    asins = asins.slice(0, 5);
-    await amazon_shop_info.getShopInfo(asins, se);
+    await amazon_shop_info.getShopInfo(asins.slice(0, 5), se);
 }
