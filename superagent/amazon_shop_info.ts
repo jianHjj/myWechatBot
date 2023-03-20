@@ -1,4 +1,7 @@
 import {Decimal} from "@prisma/client/runtime";
+import cheerio, {Cheerio} from 'cheerio';
+import {PrismaClient} from "@prisma/client";
+import {WorkSheet} from "xlsx";
 
 const superagent = require('./superagent');
 const utils = require('../utils/index');
@@ -6,9 +9,6 @@ const tc = require('../utils/type_converter');
 const mailer = require("../utils/emailer");
 const xlsx = require("xlsx");
 const env = require('../utils/env');
-
-import cheerio, {Cheerio} from 'cheerio';
-import {PrismaClient} from "@prisma/client";
 
 const prisma = new PrismaClient({
     log: ["query", "info", "warn", "error"],
@@ -213,24 +213,82 @@ export async function getShopInfo(asinList: any[], se: boolean): Promise<ShopInf
 //断货的备注
 const OUT_OF_STOCK = '断货';
 
-async function sendEmail(shopInfoList: ShopInfo[] | undefined[]): Promise<void> {
-    if (!shopInfoList) {
-        return;
+export class ShopInfoSheet {
+    sheetName: string;
+    shopInfoList: ShopInfo[] | undefined[];
+
+    constructor(sheetName: string, shopInfoList: ShopInfo[] | undefined[]) {
+        this.sheetName = sheetName;
+        this.shopInfoList = shopInfoList;
     }
+}
+
+export class ShopInfoBook {
+
+    bookName: string;
+    shopInfoSheetList: ShopInfoSheet[] | undefined[];
+
+    constructor(bookName: string, shopInfoSheetList: ShopInfoSheet[] | undefined[]) {
+        this.bookName = bookName;
+        this.shopInfoSheetList = shopInfoSheetList;
+    }
+}
+
+function writeInSheet(shopInfoList: ShopInfo[]): WorkSheet {
     //发送邮件
     let length = shopInfoList.length + 1;
     let columns = [ExcelHeadersReviewSimple];
     for (let i = 1; i < length; i++) {
-        var item = shopInfoList[i - 1];
+        let item = shopInfoList[i - 1];
         if (!item) {
             continue;
         }
         let review = item.review;
         columns[i] = review ? [review.asin, item.coverUrl, item.title, item.brand, item.first, review.sellersRankSmall, review.sellersRankBig, review.ratingsTotal, review.ratingsCount, review.ratingsReviewCount, utils.formatDateYYYYMMDD(review.createDt), item.url] : [];
     }
-    //导出excel
     /* Create a simple workbook and write XLSX to buffer */
-    let ws = xlsx.utils.aoa_to_sheet(columns);
+    return xlsx.utils.aoa_to_sheet(columns);
+}
+
+export async function sendEmailCompact(shopInfoBook: ShopInfoBook): Promise<void> {
+    let wb = xlsx.utils.book_new();
+    var shopInfoSheetList = shopInfoBook.shopInfoSheetList;
+    for (let shopInfoSheet of shopInfoSheetList) {
+        let shopInfoList: ShopInfo[] | undefined[] = shopInfoSheet.shopInfoList;
+        if (!shopInfoList) {
+            return;
+        }
+        let ws: WorkSheet = writeInSheet(shopInfoList);
+        xlsx.utils.book_append_sheet(wb, ws, shopInfoSheet.sheetName);
+    }
+
+    let body = xlsx.write(wb, {type: "buffer", bookType: "xlsx"});
+    let mailAttachment = new mailer.MailAttachment(`排名-${utils.formatDateYYYYMMDD(new Date())}.xlsx`, Buffer.from(body));
+
+    let text: string = "";
+    for (let shopInfoSheet of shopInfoSheetList) {
+        //文本内容
+        let firstInfoList = [];
+        let length: number = shopInfoSheet.shopInfoList.length;
+        for (let i = 0; i < length; i++) {
+            var shopInfo = shopInfoSheet.shopInfoList[i];
+            if (shopInfo) {
+                firstInfoList[i] = OUT_OF_STOCK === shopInfo.remark ? shopInfo.remark : '=' + shopInfo.first;
+            }
+        }
+        text = "\n" + shopInfoSheet.sheetName + "\n";
+        text = firstInfoList.join("\n");
+    }
+    await mailer.send(new mailer.MailBody(env.getValue('EMAIL_TO'), shopInfoBook.bookName, text, [mailAttachment]));
+}
+
+
+async function sendEmail(shopInfoList: ShopInfo[] | undefined[]): Promise<void> {
+    if (!shopInfoList) {
+        return;
+    }
+    //发送邮件
+    let ws = writeInSheet(shopInfoList);
     let wb = xlsx.utils.book_new();
     xlsx.utils.book_append_sheet(wb, ws, "sheet1");
     let body = xlsx.write(wb, {type: "buffer", bookType: "xlsx"});

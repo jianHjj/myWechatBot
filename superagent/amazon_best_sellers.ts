@@ -2,14 +2,13 @@ import {ShopInfo} from "./amazon_shop_info";
 import {Page} from "puppeteer";
 
 const puppeteer = require('puppeteer');
-
-
 const amazon_shop_info = require('./amazon_shop_info');
 
+// 延时函数，防止检测出类似机器人行为操作
+const delay = (ms: any) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export async function getShopInfo(url: string, se: boolean): Promise<ShopInfo[] | undefined[]> {
-    let result: ShopInfo[] | undefined[] = [];
-    await start(url, se, true);
-    return result;
+    return await start(url, se, true);
 }
 
 async function extractAsinObj(page: Page, url: string): Promise<string[]> {
@@ -44,7 +43,7 @@ async function extractAsinObj(page: Page, url: string): Promise<string[]> {
 }
 
 //设置网址
-async function start(url: string, se: boolean, hl: boolean) {
+async function start(url: string, se: boolean, hl: boolean): Promise<ShopInfo[] | undefined[]> {
     //启动浏览器,传入headless为false可以打开窗口
     const browers = await puppeteer.launch({
         headless: hl,
@@ -74,5 +73,7 @@ async function start(url: string, se: boolean, hl: boolean) {
     //关闭浏览器
     await browers.close();
     let asins = [...asins_page1, ...asins_page2];
-    await amazon_shop_info.getShopInfo(asins.slice(0, 5), se);
+    //延时一分钟
+    await delay(60000);
+    return await amazon_shop_info.getShopInfo(asins.slice(0, 5), se);
 }

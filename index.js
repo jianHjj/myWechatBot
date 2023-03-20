@@ -1,3 +1,5 @@
+// noinspection DuplicatedCode
+
 /**
  * WechatBot
  *  - https://github.com/jianHjj/myWechatBot
@@ -236,14 +238,28 @@ console.log('你的亚马逊工具定时任务在初始化了！');
 //设定亚马逊爬虫任务
 schedule.scheduleJob(config.amazonTask.dateTime, async () => {
   console.log('你的亚马逊工具开始工作啦！');
-  for (let asins of config.amazonTask.asins) {
-    await amazon_shop_info.getShopInfo(asins, true);
+
+  let asinBook = new amazon_shop_info.ShopInfoBook("asin", []);
+  let asins = config.amazonTask.asins;
+  for (let i = 0; i < asins.length; i++) {
+    let result = await amazon_shop_info.getShopInfo(asins[i].asins, false);
+    asinBook.shopInfoSheetList[i] = new amazon_shop_info.ShopInfoSheet(asins[i].sheetName, result);
     await delay(10000);
   }
-  for (let url of config.amazonTask.urls) {
-    await amazon_best_sellers.getShopInfo(url, true);
+  //发送邮件
+  await amazon_shop_info.sendEmailCompact(asinBook);
+
+  await delay(30000);
+
+  let urlBook = new amazon_shop_info.ShopInfoBook("url", []);
+  let urls = config.amazonTask.urls;
+  for (let i = 0; i < urls.length; i++) {
+    let result = await amazon_best_sellers.getShopInfo(urls[i].url, false);
+    urlBook.shopInfoSheetList[i] = new amazon_shop_info.ShopInfoSheet(urls[i].sheetName, result);
     await delay(10000);
   }
+  //发送邮件
+  await amazon_shop_info.sendEmailCompact(urlBook);
 });
 
 console.log('你的亚马逊工具定时任务初始化完成！');
