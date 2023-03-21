@@ -244,7 +244,8 @@ function writeInSheet(shopInfoList: ShopInfo[]): WorkSheet {
             continue;
         }
         let review = item.review;
-        columns[i] = review ? [review.asin, item.coverUrl, item.title, item.brand, item.first, review.sellersRankSmall, review.sellersRankBig, review.ratingsTotal, review.ratingsCount, review.ratingsReviewCount, utils.formatDateYYYYMMDD(review.createDt), item.url] : [];
+        let first = '=' + item.first;
+        columns[i] = review ? [review.asin, item.coverUrl, item.title, item.brand, first, review.sellersRankSmall, review.sellersRankBig, review.ratingsTotal, review.ratingsCount, review.ratingsReviewCount, utils.formatDateYYYYMMDD(review.createDt), item.url] : [];
     }
     /* Create a simple workbook and write XLSX to buffer */
     return xlsx.utils.aoa_to_sheet(columns);
@@ -276,8 +277,8 @@ export async function sendEmailCompact(shopInfoBook: ShopInfoBook): Promise<void
                 firstInfoList[i] = OUT_OF_STOCK === shopInfo.remark ? shopInfo.remark : '=' + shopInfo.first;
             }
         }
-        text = "\n" + shopInfoSheet.sheetName + "\n";
-        text = firstInfoList.join("\n");
+        text = text + "\n" + shopInfoSheet.sheetName + "\n";
+        text = text + firstInfoList.join("\n");
     }
     await mailer.send(new mailer.MailBody(env.getValue('EMAIL_TO'), shopInfoBook.bookName, text, [mailAttachment]));
 }
