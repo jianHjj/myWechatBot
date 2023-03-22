@@ -32,10 +32,7 @@ async function extractAsinObj(page: Page, url: string): Promise<string[]> {
         let asinList: any[] = [];
         let asinElements = document.querySelectorAll('div.p13n-sc-uncoverable-faceout')
         asinElements.forEach((asinEle: any) => {
-            asinList.push({
-                "asin": asinEle.id,
-                "url": asinEle.getElementsByClassName('a-link-normal')[0].href
-            });
+            asinList.push(asinEle.id);
         })
         return {"asins": asinList}
     });

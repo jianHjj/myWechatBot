@@ -159,7 +159,7 @@ export async function getShopInfo(asinList: any[], se: boolean): Promise<ShopInf
             let obj: any = item;
             if (obj) {
                 await delay(2000);
-                result[i] = await reqShopInfo(obj.asin);
+                result[i] = await reqShopInfoByUrl(obj.asin,obj.url);
                 let e = result[i];
                 if (e) {
                     await delay(2000);
@@ -277,7 +277,7 @@ export async function sendEmailCompact(shopInfoBook: ShopInfoBook): Promise<void
                 firstInfoList[i] = OUT_OF_STOCK === shopInfo.remark ? shopInfo.remark : '=' + shopInfo.first;
             }
         }
-        text = text + "\n" + shopInfoSheet.sheetName + "\n";
+        text = text !== "" ? text + "\n\n" + shopInfoSheet.sheetName + "\n" : shopInfoSheet.sheetName + "\n";
         text = text + firstInfoList.join("\n");
     }
     await mailer.send(new mailer.MailBody(env.getValue('EMAIL_TO'), shopInfoBook.bookName, text, [mailAttachment]));
