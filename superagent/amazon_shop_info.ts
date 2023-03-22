@@ -159,7 +159,7 @@ export async function getShopInfo(asinList: any[], se: boolean): Promise<ShopInf
             let obj: any = item;
             if (obj) {
                 await delay(2000);
-                result[i] = await reqShopInfoByUrl(obj.asin, obj.url);
+                result[i] = await reqShopInfo(obj.asin);
                 let e = result[i];
                 if (e) {
                     await delay(2000);
