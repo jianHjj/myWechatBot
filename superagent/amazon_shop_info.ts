@@ -607,5 +607,5 @@ async function reqShopReview(asin: string, review?: ShopReviewInfo | undefined):
     } catch (err) {
         console.log('获取商品信息出错', err);
     }
-    return undefined;
+    return review;
 }
