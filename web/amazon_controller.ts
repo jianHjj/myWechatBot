@@ -96,10 +96,14 @@ server.post('/amazon/getPriceByAsin', async (req: any, res: any, next: any): Pro
         let sendEmail: boolean | undefined = req.body.sendEmail;
         if (!asinList) {
             res.send(200, "asin不能为空，请输入asin");
+            lock = false;
             return next();
         }
         if (asinList.length > 1) {
-            amazon_shop_info.getShopInfo(asinList, true).then((r: any) => console.log("获取商品完毕，返回信息 ：" + r));
+            amazon_shop_info.getShopInfo(asinList, true).then((r: any) => {
+                console.log("获取商品完毕，返回信息 ：" + r);
+                lock = false;
+            });
             res.send("请稍等片刻，信息将会以邮件的形式发给您~");
             return next();
         }
@@ -110,6 +114,7 @@ server.post('/amazon/getPriceByAsin', async (req: any, res: any, next: any): Pro
             if (!first.endsWith("pg=1")) {
                 res.send(200, "pg【页码】参数不能为空，请修改URL重新提交，" +
                     "合法链接举例：https://www.amazon.com/Best-Sellers-Appliances-Ice-Makers/zgbs/appliances/2399939011/ref=zg_bs_pg_1?_encoding=UTF8&pg=1");
+                lock = false;
                 return next();
             }
             amazon_best_sellers.getShopInfo(first, true).then(r => lock = false);
@@ -124,9 +129,13 @@ server.post('/amazon/getPriceByAsin', async (req: any, res: any, next: any): Pro
         } else {
             res.send(200, "获取商品信息出错，请检查asin是否正确");
         }
-        return next();
-    } finally {
         lock = false;
+        return next();
+    } catch (err) {
+        console.log('获取商品信息出错', err);
+        lock = false;
+        res.send(200, "获取商品信息出错，程序异常！");
+        return next();
     }
 })
 
