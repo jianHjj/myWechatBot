@@ -147,22 +147,22 @@ export async function getShopInfo(asinList: any[], se: boolean): Promise<ShopInf
             let asin: string = item;
             if (asin) {
                 asin = asin.trim();
-                await delay(2000);
+                await delay(3000);
                 result[i] = await reqShopInfo(asin);
                 let e = result[i];
                 if (e) {
-                    await delay(2000);
+                    await delay(3000);
                     e.review = await reqShopReview(asin, e.review);
                 }
             }
         } else {
             let obj: any = item;
             if (obj) {
-                await delay(2000);
+                await delay(3000);
                 result[i] = await reqShopInfoByUrl(obj.asin,obj.url);
                 let e = result[i];
                 if (e) {
-                    await delay(2000);
+                    await delay(3000);
                     e.review = await reqShopReview(obj.asin, e.review);
                 }
             }

@@ -249,7 +249,7 @@ schedule.scheduleJob(config.amazonTask.dateTime, async () => {
   //发送邮件
   await amazon_shop_info.sendEmailCompact(asinBook);
 
-  await delay(30000);
+  await delay(10000);
 
   let urlBook = new amazon_shop_info.ShopInfoBook("url", []);
   let urls = config.amazonTask.urls;

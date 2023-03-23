@@ -70,7 +70,7 @@ async function start(url: string, se: boolean, hl: boolean): Promise<ShopInfo[] 
     //关闭浏览器
     await browers.close();
     let asins = [...asins_page1, ...asins_page2];
-    //延时一分钟
-    await delay(60000);
+    //延时十秒钟
+    await delay(10000);
     return await amazon_shop_info.getShopInfo(asins.slice(0, 5), se);
 }
