@@ -9,11 +9,17 @@ const delay = (ms: any) => new Promise((resolve) => setTimeout(resolve, ms));
 
 let browser: Browser;
 
+export async function getShopAsins(url: string): Promise<String[] | undefined[]> {
+    return await startBrowser(url, true);
+}
+
 export async function getShopInfo(url: string, se: boolean): Promise<ShopInfo[] | undefined[]> {
-    return await start(url, se, true);
+    let asins: String[] | undefined[] = await getShopAsins(url);
+    return await amazon_shop_info.getShopInfo(asins, se);
 }
 
 async function extractAsinObj(page: Page, url: string): Promise<string[]> {
+    await delay(10000);
     await page.goto(url)
     await page.evaluate(() => {
         var top = 0
@@ -42,7 +48,7 @@ async function extractAsinObj(page: Page, url: string): Promise<string[]> {
 }
 
 //设置网址
-async function start(url: string, se: boolean, hl: boolean): Promise<ShopInfo[] | undefined[]> {
+async function startBrowser(url: string, hl: boolean): Promise<String[] | undefined[]> {
     const setup = async () => {
         browser = await puppeteer.launch({
             headless: hl,
@@ -88,7 +94,6 @@ async function start(url: string, se: boolean, hl: boolean): Promise<ShopInfo[] 
     let asins_page2: any[] = await extractAsinObj(page, url);
 
     let asins = [...asins_page1, ...asins_page2];
-    //延时十秒钟
-    await delay(10000);
-    return await amazon_shop_info.getShopInfo(asins.slice(0, 5), se);
+
+    return asins.slice(0, 5);
 }

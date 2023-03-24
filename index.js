@@ -249,13 +249,16 @@ schedule.scheduleJob(config.amazonTask.dateTime, async () => {
   //发送邮件
   await amazon_shop_info.sendEmailCompact(asinBook);
 
-  await delay(10000);
-
   let urlBook = new amazon_shop_info.ShopInfoBook("url", []);
   let urls = config.amazonTask.urls;
+  let asinsFromUrl = [];
   for (let i = 0; i < urls.length; i++) {
-    let result = await amazon_best_sellers.getShopInfo(urls[i].url, false);
-    urlBook.shopInfoSheetList[i] = new amazon_shop_info.ShopInfoSheet(urls[i].sheetName, result);
+    let asins = await amazon_best_sellers.getShopAsins(urls[i].url);
+    asinsFromUrl[i] = {"asins": asins, "sheetName": urls[i].sheetName};
+  }
+  for (let i = 0; i < asinsFromUrl.length; i++) {
+    let result = await amazon_shop_info.getShopInfo(asinsFromUrl[i].asins, false);
+    urlBook.shopInfoSheetList[i] = new amazon_shop_info.ShopInfoSheet(asinsFromUrl[i].sheetName, result);
     await delay(10000);
   }
   //发送邮件

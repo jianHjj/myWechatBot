@@ -317,6 +317,8 @@ const RANK_DESC: string = 'Best Sellers Rank';
 const HOME_OFFICE_DESKS: string = 'Home Office Desks';
 /*花园软管卷盘小排名*/
 const GARDEN_HOSE_REELS: string = 'Garden Hose Reels';
+/*电动桌小排名*/
+const COMPUTER_WORKSTATIONS: string = 'Computer Workstations';
 const ASIN: string = 'ASIN';
 
 //拼接优惠券信息
@@ -484,6 +486,15 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
                 if ((!topSmall || topSmall === "")) {
                     for (let topEle of topList) {
                         if (topEle.includes(GARDEN_HOSE_REELS)) {
+                            //软管卷盘小排名
+                            topSmallMatch = topEle.trim().match(new RegExp('^\\d*'));
+                            if (topSmallMatch) {
+                                topSmall = topSmallMatch[0].trim();
+                            }
+                            break;
+                        }
+                        if (topEle.includes(COMPUTER_WORKSTATIONS)) {
+                            //电动桌小排名
                             topSmallMatch = topEle.trim().match(new RegExp('^\\d*'));
                             if (topSmallMatch) {
                                 topSmall = topSmallMatch[0].trim();
