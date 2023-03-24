@@ -63,7 +63,8 @@ module.exports = {
         sheetName: "酒吧椅"
       },
     ],
-    dateTime: {tz: 'Asia/Shanghai', rule: '1 10 8 * * *'}
+    dateTime: {tz: 'Asia/Shanghai', rule: '1 10 8 * * *'},
+    urlDateTime: {tz: 'Asia/Shanghai', rule: '1 01 9 * * *'}
   },
   // 测试node-schedule 时区问题
   // month 从 0-11 代表 1-12 月 , day alias date
