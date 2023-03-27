@@ -245,7 +245,7 @@ schedule.scheduleJob(config.amazonTask.dateTime, async () => {
   for (let i = 0; i < asins.length; i++) {
     let result = await amazon_shop_info.getShopInfo(asins[i].asins, false);
     asinBook.shopInfoSheetList[i] = new amazon_shop_info.ShopInfoSheet(asins[i].sheetName, result);
-    await delay(20000);
+    await delay(60000);
   }
   //发送邮件
   await amazon_shop_info.sendEmailCompact(asinBook);
@@ -261,13 +261,13 @@ schedule.scheduleJob(config.amazonTask.urlDateTime, async () => {
     asinsFromUrl[i] = {"asins": asins, "sheetName": urls[i].sheetName};
   }
 
-  await delay(60000 * 5);
+  await delay(60000 * 10);
 
   let urlBook = new amazon_shop_info.ShopInfoBook("url", []);
   for (let i = 0; i < asinsFromUrl.length; i++) {
     let result = await amazon_shop_info.getShopInfo(asinsFromUrl[i].asins, false);
     urlBook.shopInfoSheetList[i] = new amazon_shop_info.ShopInfoSheet(asinsFromUrl[i].sheetName, result);
-    await delay(20000);
+    await delay(60000);
   }
   //发送邮件
   await amazon_shop_info.sendEmailCompact(urlBook);
