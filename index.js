@@ -234,43 +234,43 @@ bot.on('message', onMessage);
 //     })
 //     .catch((e) => console.error(e));
 
-console.log('你的亚马逊工具定时任务在初始化了！');
+// console.log('你的亚马逊工具定时任务在初始化了！');
 
 //设定亚马逊爬虫任务
-schedule.scheduleJob(config.amazonTask.dateTime, async () => {
-  console.log('你的亚马逊工具开始工作啦！');
+// schedule.scheduleJob(config.amazonTask.dateTime, async () => {
+//   console.log('你的亚马逊工具开始工作啦！');
+//
+//   let asinBook = new amazon_shop_info.ShopInfoBook("asin", []);
+//   let asins = config.amazonTask.asins;
+//   for (let i = 0; i < asins.length; i++) {
+//     let result = await amazon_shop_info.getShopInfo(asins[i].asins, false);
+//     asinBook.shopInfoSheetList[i] = new amazon_shop_info.ShopInfoSheet(asins[i].sheetName, result);
+//     await delay(60000);
+//   }
+//   //发送邮件
+//   await amazon_shop_info.sendEmailCompact(asinBook);
+// });
 
-  let asinBook = new amazon_shop_info.ShopInfoBook("asin", []);
-  let asins = config.amazonTask.asins;
-  for (let i = 0; i < asins.length; i++) {
-    let result = await amazon_shop_info.getShopInfo(asins[i].asins, false);
-    asinBook.shopInfoSheetList[i] = new amazon_shop_info.ShopInfoSheet(asins[i].sheetName, result);
-    await delay(60000);
-  }
-  //发送邮件
-  await amazon_shop_info.sendEmailCompact(asinBook);
-});
-
-schedule.scheduleJob(config.amazonTask.urlDateTime, async () => {
-  console.log('你的亚马逊工具开始工作啦！');
-
-  let urls = config.amazonTask.urls;
-  let asinsFromUrl = [];
-  for (let i = 0; i < urls.length; i++) {
-    let asins = await amazon_best_sellers.getShopAsins(urls[i].url);
-    asinsFromUrl[i] = {"asins": asins, "sheetName": urls[i].sheetName};
-  }
-
-  await delay(60000 * 10);
-
-  let urlBook = new amazon_shop_info.ShopInfoBook("url", []);
-  for (let i = 0; i < asinsFromUrl.length; i++) {
-    let result = await amazon_shop_info.getShopInfo(asinsFromUrl[i].asins, false);
-    urlBook.shopInfoSheetList[i] = new amazon_shop_info.ShopInfoSheet(asinsFromUrl[i].sheetName, result);
-    await delay(60000);
-  }
-  //发送邮件
-  await amazon_shop_info.sendEmailCompact(urlBook);
-});
-
-console.log('你的亚马逊工具定时任务初始化完成！');
+// schedule.scheduleJob(config.amazonTask.urlDateTime, async () => {
+//   console.log('你的亚马逊工具开始工作啦！');
+//
+//   let urls = config.amazonTask.urls;
+//   let asinsFromUrl = [];
+//   for (let i = 0; i < urls.length; i++) {
+//     let asins = await amazon_best_sellers.getShopAsins(urls[i].url);
+//     asinsFromUrl[i] = {"asins": asins, "sheetName": urls[i].sheetName};
+//   }
+//
+//   await delay(60000 * 10);
+//
+//   let urlBook = new amazon_shop_info.ShopInfoBook("url", []);
+//   for (let i = 0; i < asinsFromUrl.length; i++) {
+//     let result = await amazon_shop_info.getShopInfo(asinsFromUrl[i].asins, false);
+//     urlBook.shopInfoSheetList[i] = new amazon_shop_info.ShopInfoSheet(asinsFromUrl[i].sheetName, result);
+//     await delay(60000);
+//   }
+//   //发送邮件
+//   await amazon_shop_info.sendEmailCompact(urlBook);
+// });
+//
+// console.log('你的亚马逊工具定时任务初始化完成！');
