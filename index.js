@@ -236,7 +236,7 @@ bot.on('message', onMessage);
 
 console.log('你的亚马逊工具定时任务在初始化了！');
 
-设定亚马逊爬虫任务
+//设定亚马逊爬虫任务
 schedule.scheduleJob(config.amazonTask.dateTime, async () => {
   console.log('你的亚马逊工具开始工作啦！');
 
