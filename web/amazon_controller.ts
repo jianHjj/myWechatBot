@@ -93,6 +93,7 @@ server.post('/amazon/getPriceByAsin', async (req: any, res: any, next: any): Pro
     lock = true;
     try {
         let asinList: Array<string> | undefined = req.body.asin;
+        let country: string | undefined = req.body.country;
         let sendEmail: boolean | undefined = req.body.sendEmail;
         if (!asinList) {
             res.send(200, "asin不能为空，请输入asin");
@@ -100,7 +101,7 @@ server.post('/amazon/getPriceByAsin', async (req: any, res: any, next: any): Pro
             return next();
         }
         if (asinList.length > 1) {
-            amazon_shop_info.getShopInfo(asinList, true).then((r: any) => {
+            amazon_shop_info.getShopInfo(asinList, true, country).then((r: any) => {
                 console.log("获取商品完毕，返回信息 ：" + r);
                 lock = false;
             });
@@ -117,12 +118,12 @@ server.post('/amazon/getPriceByAsin', async (req: any, res: any, next: any): Pro
                 lock = false;
                 return next();
             }
-            amazon_best_sellers.getShopInfo(first, true).then(r => lock = false);
+            amazon_best_sellers.getShopInfo(first, true, country).then(r => lock = false);
             res.send("请稍等片刻，信息将会以邮件的形式发给您~");
             return next();
         }
 
-        let shopInfoList: ShopInfo[] | undefined[] = await amazon_shop_info.getShopInfo(asinList, sendEmail);
+        let shopInfoList: ShopInfo[] | undefined[] = await amazon_shop_info.getShopInfo(asinList, sendEmail, country);
         var shopInfo: ShopInfo | undefined = shopInfoList[0];
         if (shopInfo) {
             res.send("=" + shopInfo.first);
@@ -142,7 +143,8 @@ server.post('/amazon/getPriceByAsin', async (req: any, res: any, next: any): Pro
 server.post('/amazon/getPriceByUrl', async (req: any, res: any, next: any): Promise<any> => {
     lock = true;
     let url: string | undefined = req.body.url;
-    amazon_best_sellers.getShopInfo(url, true).then(r => lock = false);
+    let country: string | undefined = req.body.country;
+    amazon_best_sellers.getShopInfo(url, true, country).then(r => lock = false);
     res.send("请稍等片刻，信息将会以邮件的形式发给您~");
     return next();
 })

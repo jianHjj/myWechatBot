@@ -13,9 +13,9 @@ export async function getShopAsins(url: string): Promise<String[] | undefined[]>
     return await startBrowser(url, true);
 }
 
-export async function getShopInfo(url: string, se: boolean): Promise<ShopInfo[] | undefined[]> {
+export async function getShopInfo(url: string, se: boolean, country: string): Promise<ShopInfo[] | undefined[]> {
     let asins: String[] | undefined[] = await getShopAsins(url);
-    return await amazon_shop_info.getShopInfo(asins, se);
+    return await amazon_shop_info.getShopInfo(asins, se, country);
 }
 
 async function extractAsinObj(page: Page, url: string): Promise<string[]> {

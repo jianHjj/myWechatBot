@@ -14,8 +14,31 @@ const prisma = new PrismaClient({
     log: ["query", "info", "warn", "error"],
 });
 
-const url_shop_info: string = 'https://www.amazon.com/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/dp/{ASIN}/ref=cm_cr_arp_d_product_top?ie=UTF8';
-const url_shop_review: string = 'https://www.amazon.com/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/product-reviews/{ASIN}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews';
+class ShopUrl {
+    url_shop_info: string;
+    url_shop_review: string;
+}
+
+/**
+ * 美国站URL
+ */
+const usa_url: ShopUrl = {
+    url_shop_info: 'https://www.amazon.com/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/dp/{ASIN}/ref=cm_cr_arp_d_product_top?ie=UTF8',
+    url_shop_review: 'https://www.amazon.com/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/product-reviews/{ASIN}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews'
+}
+
+/**
+ * 加拿大站URL
+ */
+const canada_url: ShopUrl = {
+    url_shop_info: 'https://www.amazon.ca/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/dp/{ASIN}/ref=cm_cr_arp_d_product_top?ie=UTF8',
+    url_shop_review: 'https://www.amazon.ca/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/product-reviews/{ASIN}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews'
+}
+
+const url_map: Map<String, ShopUrl> = new Map();
+url_map.set("usa", usa_url);
+url_map.set("canada", canada_url);
+
 
 // 延时函数，防止检测出类似机器人行为操作
 const delay = (ms: any) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -135,8 +158,9 @@ function getCouponPrice(offsetPrice: Decimal, coupon: Decimal, couponUnit: strin
  * 获取商品信息
  * @param asinList asin编码列表
  * @param se 是否发送邮件
+ * @param country 地区
  */
-export async function getShopInfo(asinList: any[], se: boolean): Promise<ShopInfo[] | undefined[]> {
+export async function getShopInfo(asinList: any[], se: boolean, country: string): Promise<ShopInfo[] | undefined[]> {
     // 获取商品信息
     let result: ShopInfo[] | undefined[] = [];
     var i: number;
@@ -148,22 +172,22 @@ export async function getShopInfo(asinList: any[], se: boolean): Promise<ShopInf
             if (asin) {
                 asin = asin.trim();
                 await delay(3000);
-                result[i] = await reqShopInfo(asin);
+                result[i] = await reqShopInfo(asin, country);
                 let e = result[i];
                 if (e) {
                     await delay(3000);
-                    e.review = await reqShopReview(asin, e.review);
+                    e.review = await reqShopReview(asin, country, e.review);
                 }
             }
         } else {
             let obj: any = item;
             if (obj) {
                 await delay(3000);
-                result[i] = await reqShopInfoByUrl(obj.asin,obj.url);
+                result[i] = await reqShopInfoByUrl(obj.asin, obj.url);
                 let e = result[i];
                 if (e) {
                     await delay(3000);
-                    e.review = await reqShopReview(obj.asin, e.review);
+                    e.review = await reqShopReview(obj.asin, country, e.review);
                 }
             }
         }
@@ -331,9 +355,13 @@ function concatDeliveryPrice(s: string, deliveryPrice: string | any) {
     return deliveryPrice && deliveryPrice !== '' ? `${s}+${deliveryPrice}` : `${s}`;
 }
 
-async function reqShopInfo(asin: string): Promise<ShopInfo | undefined> {
+async function reqShopInfo(asin: string, country: string): Promise<ShopInfo | undefined> {
     //url asin替换
-    var url: string = url_shop_info.replace("{ASIN}", asin)
+    let shopUrl: ShopUrl | undefined = url_map.get(country);
+    if (!shopUrl) {
+        throw new Error("地区不存在！请检查地区是否合法");
+    }
+    var url: string = shopUrl.url_shop_info.replace("{ASIN}", asin)
     return await reqShopInfoByUrl(asin, url);
 }
 
@@ -589,7 +617,7 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
 }
 
 
-async function reqShopReview(asin: string, review?: ShopReviewInfo | undefined): Promise<ShopReviewInfo | undefined> {
+async function reqShopReview(asin: string, country: string, review?: ShopReviewInfo | undefined): Promise<ShopReviewInfo | undefined> {
     var newReview: boolean = false;
     if (!review) {
         review = new ShopReviewInfo(asin);
@@ -597,7 +625,11 @@ async function reqShopReview(asin: string, review?: ShopReviewInfo | undefined):
     }
     try {
         //url asin替换
-        var url: string = url_shop_review.replace("{ASIN}", asin)
+        let shopUrl: ShopUrl | undefined = url_map.get(country);
+        if (!shopUrl) {
+            throw new Error("地区不存在！请检查地区是否合法");
+        }
+        var url: string = shopUrl.url_shop_review.replace("{ASIN}", asin)
         let res = await superagent.req({url: url, method: 'GET', spider: true});
         let $ = cheerio.load(res);
 

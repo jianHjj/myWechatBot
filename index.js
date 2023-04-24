@@ -73,7 +73,7 @@ async function onMessage(msg) {
       let sendEmail = content.substr(0, 2) === '=@';
       //删除第一个值
       asinList = asinList.slice(1, asinList.length + 1);
-      var shopInfoList = await amazon_shop_info.getShopInfo(asinList, sendEmail);
+      var shopInfoList = await amazon_shop_info.getShopInfo(asinList, sendEmail,"usa");
       var firstInfoList = [];
       for (let i = 0; i < shopInfoList.length; i++) {
         var shopInfo = shopInfoList[i];
