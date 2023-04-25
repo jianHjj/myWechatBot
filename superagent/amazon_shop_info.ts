@@ -39,8 +39,8 @@ const canada_url: ShopUrl = {
  * 德国站URL
  */
 const de_url: ShopUrl = {
-    url_shop_info: 'https://www.amazon.de/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/dp/{ASIN}/ref=cm_cr_arp_d_product_top?ie=UTF8',
-    url_shop_review: 'https://www.amazon.de/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/product-reviews/{ASIN}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews'
+    url_shop_info: 'https://www.amazon.de/-/en/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/dp/{ASIN}/ref=cm_cr_arp_d_product_top?ie=UTF8',
+    url_shop_review: 'https://www.amazon.de/-/en/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/product-reviews/{ASIN}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews'
 }
 
 /**
@@ -165,9 +165,7 @@ function getCouponPrice(offsetPrice: Decimal, coupon: Decimal, couponUnit: strin
         if (couponUnit === CHAR_PERCENT) {
             return offsetPrice.mul(coupon.div(100)).toNumber().toFixed(2);
         }
-        if (couponUnit === CHAR_DOLLAR) {
-            return coupon.toNumber().toFixed(2);
-        }
+        return coupon.toNumber().toFixed(2);
     }
     return '';
 }
@@ -349,8 +347,6 @@ async function sendEmail(shopInfoList: ShopInfo[] | undefined[]): Promise<void> 
     await mailer.send(new mailer.MailBody(env.getValue('EMAIL_TO'), "排名 & 价格", text, [mailAttachment]));
 }
 
-/*美元符号*/
-const CHAR_DOLLAR: string = '$';
 /*百分比符号*/
 const CHAR_PERCENT: string = '%';
 /*排名 talbe->th 内容*/
@@ -390,8 +386,15 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
         let $ = cheerio.load(res);
         //价格信息
         let shopInfo = undefined;
+        //货币符号 默认美元
+        let charDollar: string = '$';
         let price = $('#corePriceDisplay_desktop_feature_div');
         if (price) {
+            //先获取货币符号
+            let charDollarList = price.find('.a-spacing-none .priceToPay .a-price-symbol');
+            if (charDollarList) {
+                charDollar = charDollarList.eq(0).text().trim();
+            }
             //真实价格-折扣价
             let offsetPriceList = price
                 .find('.a-spacing-none .priceToPay .a-offscreen');
@@ -399,14 +402,14 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
             if (offsetPriceList) {
                 offsetPrice = offsetPriceList.eq(0)
                     .text()
-                    .replace(/(^\s*)|(\s*$)/g, '').replace(CHAR_DOLLAR, '');
+                    .replace(/(^\s*)|(\s*$)/g, '').replace(charDollar, '');
             }
 
             let basisPrice = '';
             if (!offsetPrice || offsetPrice === '') {
                 //兼容另外一种显示风格
                 let pricesStr: string = $('#corePrice_desktop').find('.a-spacing-small').children().children().children().find('.a-text-price .a-offscreen').text();
-                let priceArr: string[] = pricesStr.replace(CHAR_DOLLAR, '').split(CHAR_DOLLAR);
+                let priceArr: string[] = pricesStr.replace(charDollar, '').split(charDollar);
                 if (priceArr && priceArr.length >= 2) {
                     basisPrice = priceArr[0];
                     offsetPrice = priceArr[1];
@@ -417,7 +420,7 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
                 if (basisPriceList) {
                     basisPrice = basisPriceList.eq(0)
                         .text()
-                        .replace(/(^\s*)|(\s*$)/g, '').replace(CHAR_DOLLAR, '');
+                        .replace(/(^\s*)|(\s*$)/g, '').replace(charDollar, '');
                 }
             }
 
@@ -436,10 +439,10 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
                 let complexText: string = couponRoot.find('.a-color-success').find('label').text();
                 //开始匹配优惠券价格
                 //优惠券存在两种单位
-                if (complexText.includes(CHAR_DOLLAR)) {
-                    //美元符号
-                    couponUnit = CHAR_DOLLAR;
-                    let couponMatchArr: string[] | null = complexText.split(CHAR_DOLLAR)[1]
+                if (complexText.includes(charDollar)) {
+                    //货币符号
+                    couponUnit = charDollar;
+                    let couponMatchArr: string[] | null = complexText.split(charDollar)[1]
                         .match(new RegExp('\\b\\d*\\.?\\d\\b'));
                     if (couponMatchArr && couponMatchArr.length > 0) {
                         let couponItem: string = couponMatchArr[0];
@@ -469,7 +472,7 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
             var deliveryPriceAttr = $('#mir-layout-DELIVERY_BLOCK-slot-PRIMARY_DELIVERY_MESSAGE_LARGE').children()
                 .attr('data-csa-c-delivery-price');
             let deliveryPriceMatch = deliveryPriceAttr ? deliveryPriceAttr
-                    .replace(/(^\s*)|(\s*$)/g, '').replace(CHAR_DOLLAR, '').match(new RegExp('\\b\\d*\\.?\\d*\\b'))
+                    .replace(/(^\s*)|(\s*$)/g, '').replace(charDollar, '').match(new RegExp('\\b\\d*\\.?\\d*\\b'))
                 : undefined;
 
             let couponPrice: string = offsetPrice && offsetPrice !== ''
@@ -507,9 +510,9 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
         }
 
         //获取review信息
-        var ratingsTotal: string = $('#acrPopover .a-declarative .a-popover-trigger .a-icon-star .a-icon-alt').eq(0).text()
+        let ratingsTotal: string = $('#acrPopover .a-declarative .a-popover-trigger .a-icon-star .a-icon-alt').eq(0).text()
             .replace('out of 5 stars', '').trim();
-        var ratingsCount: string = $('#acrCustomerReviewText').eq(0).text()
+        let ratingsCount: string = $('#acrCustomerReviewText').eq(0).text()
             .replace('ratings', '')
             .replace(',', '').trim();
 
@@ -524,8 +527,13 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
             let th: string = thArray.eq(i).text();
             if (th.includes(RANK_DESC)) {
                 //从商品详情中抽取排名
-                var topList = tdArray.eq(i).text().replace(/(,)/g, '').split("#");
-                let topSmallIndex: number = 2;
+                let topList: string[] = [];
+                let spanArray = tdArray.eq(i).find('span').find('span');
+                for (let j = 0; j < spanArray.length; j++) {
+                    topList[j] = spanArray.eq(j).text().replace(/(,)/g, '').replace('#','').trim();
+                }
+                // var topList = tdArray.eq(i).text().replace(/(,)/g, '').split("#");
+                let topSmallIndex: number = 1;
                 let topSmallMatch: RegExpMatchArray | null;
 
                 //按照英文描述匹配小排名
@@ -551,14 +559,14 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
                 }
 
                 //按照出现顺序赋值大小排名
-                if (topList.length === 4) {
+                if (topList.length === 3) {
                     //出现三排
-                    topSmallIndex = 3;
+                    topSmallIndex = 2;
                 }
 
                 //大排名
                 if ((!topBig || topBig === "")) {
-                    var t1 = topList[1];
+                    let t1 = topList[0];
                     if (t1) {
                         var topBigMatch = t1.trim().match(new RegExp('^\\d*'));
                         if (topBigMatch) {
@@ -569,7 +577,7 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
 
                 //小排名
                 if ((!topSmall || topSmall === "")) {
-                    var t2 = topList[topSmallIndex];
+                    let t2 = topList[topSmallIndex];
                     if (t2) {
                         topSmallMatch = t2.trim().match(new RegExp('^\\d*'));
                         if (topSmallMatch) {
