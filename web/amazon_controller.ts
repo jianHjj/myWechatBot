@@ -93,7 +93,7 @@ server.post('/amazon/getPriceByAsin', async (req: any, res: any, next: any): Pro
     lock = true;
     try {
         let asinList: Array<string> | undefined = req.body.asin;
-        let country: string | undefined = req.body.country;
+        let country: string | undefined = req.body.country ? req.body.country : '';
         let sendEmail: boolean | undefined = req.body.sendEmail;
         if (!asinList) {
             res.send(200, "asin不能为空，请输入asin");

@@ -57,11 +57,28 @@ url_map.set("canada", canada_url);
 url_map.set("de", de_url);
 url_map.set("uk", uk_url);
 
+const country_map: Map<String, String> = new Map();
+country_map.set("美国", "usa");
+country_map.set("加拿大", "canada");
+country_map.set("德国", "de");
+country_map.set("英国", "uk");
+
+const country_map_reverse: Map<String, String> = new Map();
+
+country_map.forEach((value, key) => {
+    country_map_reverse.set(value, key);
+});
+
+const chineseReg: RegExp = new RegExp('^[\u4E00-\u9FFF]+');
+
+const decimalReg = new RegExp('([1-9]\\d*\\.?\\d*)|(0\\.\\d*[1-9])');
+
 
 // 延时函数，防止检测出类似机器人行为操作
 const delay = (ms: any) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export class ShopInfo {
+    country: string;
     asin: string;
     first: string;
     basisPrice: string;
@@ -123,7 +140,7 @@ export class ShopInfo {
 }
 
 //excel headers
-export const ExcelHeadersReviewSimple: string[] = ["asin", "封面", "标题", "品牌名", "价格", "小排名", "大排名", "总评分", "ratingsCount", "ratingsReviewCount", "日期", "商品链接"];
+export const ExcelHeadersReviewSimple: string[] = ["地区", "asin", "封面", "标题", "品牌名", "价格", "小排名", "大排名", "总评分", "ratingsCount", "ratingsReviewCount", "日期", "商品链接"];
 
 class ShopReviewInfo {
     asin: string;
@@ -187,23 +204,30 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
             let asin: string = item;
             if (asin) {
                 asin = asin.trim();
-                await delay(3000);
+                await delay(2000);
+                //判断asin中是否携带中文地区
+                let matchChinese: RegExpMatchArray | null = asin.match(chineseReg);
+                if (matchChinese) {
+                    let chinese: String | undefined = matchChinese.at(0);
+                    if (chinese) {
+                        let v: String | undefined = country_map.get(chinese);
+                        if (v) {
+                            country = v.toString().trim();
+                        }
+                    }
+                    asin = asin.replace(chineseReg, '').trim();
+                }
+
+                //如果没有地区 默认为美国
+                if (!country || country.length == 0) {
+                    country = country_map_reverse.keys().next().value;
+                }
                 result[i] = await reqShopInfo(asin, country);
                 let e = result[i];
                 if (e) {
-                    await delay(3000);
+                    e.country = country_map_reverse.get(country).toString();
+                    await delay(2000);
                     e.review = await reqShopReview(asin, country, e.review);
-                }
-            }
-        } else {
-            let obj: any = item;
-            if (obj) {
-                await delay(3000);
-                result[i] = await reqShopInfoByUrl(obj.asin, obj.url);
-                let e = result[i];
-                if (e) {
-                    await delay(3000);
-                    e.review = await reqShopReview(obj.asin, country, e.review);
                 }
             }
         }
@@ -285,7 +309,7 @@ function writeInSheet(shopInfoList: ShopInfo[]): WorkSheet {
         }
         let review = item.review;
         let first = '=' + item.first;
-        columns[i] = review ? [review.asin, item.coverUrl, item.title, item.brand, first, review.sellersRankSmall, review.sellersRankBig, review.ratingsTotal, review.ratingsCount, review.ratingsReviewCount, utils.formatDateYYYYMMDD(review.createDt), item.url] : [];
+        columns[i] = review ? [item.country, review.asin, item.coverUrl, item.title, item.brand, first, review.sellersRankSmall, review.sellersRankBig, review.ratingsTotal, review.ratingsCount, review.ratingsReviewCount, utils.formatDateYYYYMMDD(review.createDt), item.url] : [];
     }
     /* Create a simple workbook and write XLSX to buffer */
     return xlsx.utils.aoa_to_sheet(columns);
@@ -409,7 +433,14 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
             if (!offsetPrice || offsetPrice === '') {
                 //兼容另外一种显示风格
                 let pricesStr: string = $('#corePrice_desktop').find('.a-spacing-small').children().children().children().find('.a-text-price .a-offscreen').text();
+                if (!charDollar) {
+                    charDollar = pricesStr.replace(decimalReg, '');
+                }
                 let priceArr: string[] = pricesStr.replace(charDollar, '').split(charDollar);
+                if (priceArr && priceArr.length == 1) {
+                    basisPrice = priceArr[0];
+                    offsetPrice = priceArr[0];
+                }
                 if (priceArr && priceArr.length >= 2) {
                     basisPrice = priceArr[0];
                     offsetPrice = priceArr[1];
@@ -530,7 +561,7 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
                 let topList: string[] = [];
                 let spanArray = tdArray.eq(i).find('span').find('span');
                 for (let j = 0; j < spanArray.length; j++) {
-                    topList[j] = spanArray.eq(j).text().replace(/(,)/g, '').replace('#','').trim();
+                    topList[j] = spanArray.eq(j).text().replace(/(,)/g, '').replace('#', '').trim();
                 }
                 // var topList = tdArray.eq(i).text().replace(/(,)/g, '').split("#");
                 let topSmallIndex: number = 1;
