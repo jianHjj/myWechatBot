@@ -51,17 +51,20 @@ const uk_url: ShopUrl = {
     url_shop_review: 'https://www.amazon.co.uk/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/product-reviews/{ASIN}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews&deliveryCountryCode=GB'
 }
 
+const de:string = "de";
+const uk:string = "uk";
+
 const url_map: Map<String, ShopUrl> = new Map();
 url_map.set("usa", usa_url);
 url_map.set("canada", canada_url);
-url_map.set("de", de_url);
-url_map.set("uk", uk_url);
+url_map.set(de, de_url);
+url_map.set(uk, uk_url);
 
 const country_map: Map<String, String> = new Map();
 country_map.set("美国", "usa");
 country_map.set("加拿大", "canada");
-country_map.set("德国", "de");
-country_map.set("英国", "uk");
+country_map.set("德国", de);
+country_map.set("英国", uk);
 
 const country_map_reverse: Map<String, String> = new Map();
 
@@ -399,8 +402,25 @@ async function reqShopInfo(asin: string, country: string): Promise<ShopInfo | un
     if (!shopUrl) {
         throw new Error("地区不存在！请检查地区是否合法");
     }
-    var url: string = shopUrl.url_shop_info.replace("{ASIN}", asin)
-    return await reqShopInfoByUrl(asin, url);
+    var url: string = shopUrl.url_shop_info.replace("{ASIN}", asin);
+
+    let shopInfo: ShopInfo | undefined = await reqShopInfoByUrl(asin, url);
+
+    //特殊处理，部分地区不计算运费
+    if (shopInfo && shopInfo.first != OUT_OF_STOCK) {
+        //拼接微信返回信息
+        let couponPrice: string = shopInfo.offsetPrice && shopInfo.offsetPrice !== ''
+            ? getCouponPrice(new Decimal(shopInfo.offsetPrice), new Decimal(shopInfo.coupon), shopInfo.couponUnit)
+            : '';
+
+        //德国 | 英国 不拼接运费
+        let first: string = country == uk || country == de
+            ?concatCouponPrice(shopInfo.offsetPrice, couponPrice)
+            :concatDeliveryPrice(concatCouponPrice(shopInfo.offsetPrice, couponPrice), shopInfo.deliveryPrice);
+        shopInfo.first = first;
+        shopInfo.remark = first;
+    }
+    return shopInfo;
 }
 
 
@@ -506,10 +526,6 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
                     .replace(/(^\s*)|(\s*$)/g, '').replace(charDollar, '').match(new RegExp('\\b\\d*\\.?\\d*\\b'))
                 : undefined;
 
-            let couponPrice: string = offsetPrice && offsetPrice !== ''
-                ? getCouponPrice(new Decimal(offsetPrice), new Decimal(coupon), couponUnit)
-                : '';
-
             //获取配送费
             let deliveryPrice = '';
             if (deliveryPriceMatch) {
@@ -535,9 +551,7 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
             let coverImgDom = $('#imgTagWrapperId');
             let coverImgUrl: string = coverImgDom.children().eq(0).attr('data-old-hires');
 
-            //拼接微信返回信息
-            let first: string = concatDeliveryPrice(concatCouponPrice(offsetPrice, couponPrice), deliveryPrice);
-            shopInfo = new ShopInfo(asin, first, basisPrice, offset + '', offsetPrice, coupon, couponUnit, deliveryPrice, first, title, brand, url, coverImgUrl);
+            shopInfo = new ShopInfo(asin, '', basisPrice, offset + '', offsetPrice, coupon, couponUnit, deliveryPrice, '', title, brand, url, coverImgUrl);
         }
 
         //获取review信息
