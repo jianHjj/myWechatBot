@@ -51,8 +51,8 @@ const uk_url: ShopUrl = {
     url_shop_review: 'https://www.amazon.co.uk/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/product-reviews/{ASIN}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews&deliveryCountryCode=GB'
 }
 
-const de:string = "de";
-const uk:string = "uk";
+const de: string = "de";
+const uk: string = "uk";
 
 const url_map: Map<String, ShopUrl> = new Map();
 url_map.set("usa", usa_url);
@@ -414,11 +414,13 @@ async function reqShopInfo(asin: string, country: string): Promise<ShopInfo | un
             : '';
 
         //德国 | 英国 不拼接运费
-        let first: string = country == uk || country == de
-            ?concatCouponPrice(shopInfo.offsetPrice, couponPrice)
-            :concatDeliveryPrice(concatCouponPrice(shopInfo.offsetPrice, couponPrice), shopInfo.deliveryPrice);
-        shopInfo.first = first;
-        shopInfo.remark = first;
+        let first: String = country == uk || country == de
+            ? concatCouponPrice(shopInfo.offsetPrice, couponPrice)
+            : concatDeliveryPrice(concatCouponPrice(shopInfo.offsetPrice, couponPrice), shopInfo.deliveryPrice);
+        if (first) {
+            shopInfo.first = first.toString();
+            shopInfo.remark = first.toString();
+        }
     }
     return shopInfo;
 }
@@ -455,6 +457,13 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
                 let pricesStr: string = $('#corePrice_desktop').find('.a-spacing-small').children().children().children().find('.a-text-price .a-offscreen').text();
                 if (!charDollar) {
                     charDollar = pricesStr.replace(decimalReg, '');
+                }
+
+                //判断价格是否异常
+                if (charDollar) {
+                    if (charDollar.length != 1) {
+                        return new ShopInfo(asin, '价格异常：价格区间', '', '', '', 0, '', '', '', '', '', url, '')
+                    }
                 }
                 let priceArr: string[] = pricesStr.replace(charDollar, '').split(charDollar);
                 if (priceArr && priceArr.length == 1) {
