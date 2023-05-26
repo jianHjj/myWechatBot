@@ -376,6 +376,8 @@ async function sendEmail(shopInfoList: ShopInfo[] | undefined[]): Promise<void> 
 
 /*百分比符号*/
 const CHAR_PERCENT: string = '%';
+/*欧元符号*/
+const EURO_CHAR: string = '€';
 /*排名 talbe->th 内容*/
 const RANK_DESC: string = 'Best Sellers Rank';
 /*桌子类商品的小排名*/
@@ -497,6 +499,12 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
             if (isCoupon && isCoupon === 'true') {
                 //是优惠券信息
                 let complexText: string = couponRoot.find('.a-color-success').find('label').text();
+
+                if (EURO_CHAR === charDollar) {
+                    //兼容欧元区优惠券H5
+                    complexText = couponRoot.find('label').text();
+                }
+
                 //开始匹配优惠券价格
                 //优惠券存在两种单位
                 if (complexText.includes(charDollar)) {
