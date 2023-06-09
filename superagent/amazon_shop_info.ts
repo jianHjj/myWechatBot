@@ -494,13 +494,17 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
             //获取优惠券信息
             let coupon: number = 0;
             let couponUnit: string = '';
+            let couponClassName2 = 'promoPriceBlockMessage_OneTimePurchase';
             let couponRoot: Cheerio<any> = $('#promoPriceBlockMessage_feature_div .promoPriceBlockMessage').children();
+            if (couponRoot.length == 0) {
+                couponRoot = $('#promoPriceBlockMessage_feature_div .' + couponClassName2 + '').children();
+            }
             let isCoupon: string | undefined = couponRoot.attr('data-csa-c-coupon');
             if (isCoupon && isCoupon === 'true') {
                 //是优惠券信息
                 let complexText: string = couponRoot.find('.a-color-success').find('label').text();
 
-                if (EURO_CHAR === charDollar) {
+                if (EURO_CHAR === charDollar || complexText === '') {
                     //兼容欧元区优惠券H5
                     complexText = couponRoot.find('label').text();
                 }
