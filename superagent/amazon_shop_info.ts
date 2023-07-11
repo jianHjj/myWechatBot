@@ -489,7 +489,7 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
             //兼容 有 [Join Prime to buy this item at ?] 这行字的情况
             let combineOffsetPrice1: string = $('#primeExclusivePricingMessage .a-size-base').text();
             if (combineOffsetPrice1 && combineOffsetPrice1 !== '') {
-                offsetPrice = combineOffsetPrice1.replace(/(^\s*)|(\s*$)/g, '').replace(charDollar, '');
+                offsetPrice = combineOffsetPrice1.replace(/(^\s*)|(\s*$)/g, '').replace(charDollar, '').split("$")[0];
             }
 
             //获取折扣
