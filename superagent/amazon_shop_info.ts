@@ -453,6 +453,12 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
                     .replace(/(^\s*)|(\s*$)/g, '').replace(charDollar, '');
             }
 
+            //fix 部分价格结构不同
+            if (!offsetPrice || offsetPrice === '') {
+                offsetPrice = price.find('.a-spacing-none .priceToPay').eq(0).children().eq(1).text()
+                    .replace(/(^\s*)|(\s*$)/g, '').replace(charDollar, '');
+            }
+
             let basisPrice = '';
             if (!offsetPrice || offsetPrice === '') {
                 //兼容另外一种显示风格
