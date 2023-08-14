@@ -226,17 +226,18 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
                     country = country_map_reverse.keys().next().value;
                 }
                 result[i] = await reqShopInfo(asin, country);
-                let e = result[i];
-                if (e) {
-                    e.country = country_map_reverse.get(country).toString();
-                    await delay(2000);
-                    e.review = await reqShopReview(asin, country, e.review);
-                }
             }
         }
     }
 
     for (let e of result) {
+        if (e && e.asin) {
+            //获取review info
+            e.country = country_map_reverse.get(country).toString();
+            await delay(2000);
+            e.review = await reqShopReview(e.asin, country, e.review);
+        }
+
         if (e && !e.fromDB) {
             //保存result
             const created = await prisma.amazon_goods_price.create({
