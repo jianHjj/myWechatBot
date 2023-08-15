@@ -252,7 +252,7 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
                     e.review = await reqShopReview(asin, country, e.review);
                 }
 
-                console.log(new Date().toLocaleString() + " [asin = " + asin + ";result = " + e ? e.toString() : "" + "]");
+                console.log(new Date().toLocaleString() + " [asin = " + asin + ";price = " + e ? e.first : "" + "]");
             }
         }
     }
