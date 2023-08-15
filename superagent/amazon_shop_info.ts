@@ -414,8 +414,11 @@ async function reqShopInfo(asin: string, country: string): Promise<ShopInfo | un
     var url: string = shopUrl.url_shop_info.replace("{ASIN}", asin);
 
     let shopInfo: ShopInfo | undefined = await reqShopInfoByUrl(asin, url);
-    //默认值设置
-    shopInfo.country = country;
+
+    if (shopInfo) {
+        //默认值设置
+        shopInfo.country = country;
+    }
 
     //特殊处理，部分地区不计算运费
     if (shopInfo && shopInfo.first != OUT_OF_STOCK) {
