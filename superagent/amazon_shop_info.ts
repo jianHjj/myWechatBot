@@ -236,6 +236,8 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
                 while ((!e || !e.first || e.first === '') && time < loop) {
                     //如果没查到重试
                     await delay(delayMs);
+                    let emptyPrice = !e || !e.first || e.first === '';
+                    console.log(new Date().toLocaleString() + " [asin = " + asin + ";emptyPrice = " + emptyPrice + "]")
                     console.log(new Date().toLocaleString() + " 开始重试 [loop = " + time + ";asin = " + asin + ";country = " + country + "]")
                     result[i] = await reqShopInfo(asin, country);
                     e = result[i];
@@ -252,7 +254,8 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
                     e.review = await reqShopReview(asin, country, e.review);
                 }
 
-                console.log(new Date().toLocaleString() + " [asin = " + asin + ";price = " + e ? e.first : "" + "]");
+                let price = e ? e.first : "";
+                console.log(new Date().toLocaleString() + " [asin = " + asin + ";price = " + price + "]");
             }
         }
     }
