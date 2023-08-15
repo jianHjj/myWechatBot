@@ -232,7 +232,7 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
                 let e = result[i];
                 let time: number = 0;
                 let delayMs: number = initMs;
-                while (!e && time < loop) {
+                while ((!e || !e.first || e.first === '') && time < loop) {
                     //如果没查到重试
                     await delay(delayMs);
                     console.log(new Date().toLocaleString() + " 开始重试 [loop = " + time + ";asin = " + asin + ";country = " + country + "]")
