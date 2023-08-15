@@ -201,9 +201,10 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
     let result: ShopInfo[] | undefined[] = [];
     var i: number;
     var length = asinList.length;
-    let factor: number = 2;
+    let factor: number = 1.5;
     let initMs: number = 2000;
-    let loop: number = 3;
+    let maxMs: number = 10 * 1000;
+    let loop: number = 5;
     for (i = 0; i < length; i++) {
         let item = asinList[i];
         if (typeof item === 'string') {
@@ -239,6 +240,9 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
                     result[i] = await reqShopInfo(asin, country);
                     e = result[i];
                     delayMs = delayMs * factor;
+                    if (delayMs > maxMs) {
+                        delayMs = maxMs;
+                    }
                     time++;
                 }
 
@@ -247,6 +251,8 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
                     await delay(2000);
                     e.review = await reqShopReview(asin, country, e.review);
                 }
+
+                console.log(new Date().toLocaleString() + " [asin = " + asin + ";result = " + e ? e.toString() : "" + "]");
             }
         }
     }
