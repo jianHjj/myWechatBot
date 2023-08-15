@@ -201,13 +201,16 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
     let result: ShopInfo[] | undefined[] = [];
     var i: number;
     var length = asinList.length;
+    let factor: number = 2;
+    let initMs: number = 2000;
+    let loop: number = 3;
     for (i = 0; i < length; i++) {
         let item = asinList[i];
         if (typeof item === 'string') {
             let asin: string = item;
             if (asin) {
                 asin = asin.trim();
-                await delay(2500);
+                await delay(2000);
                 //判断asin中是否携带中文地区
                 let matchChinese: RegExpMatchArray | null = asin.match(chineseReg);
                 if (matchChinese) {
@@ -226,58 +229,64 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
                     country = country_map_reverse.keys().next().value;
                 }
                 result[i] = await reqShopInfo(asin, country);
+                let e = result[i];
+                let time: number = 0;
+                let delayMs: number = initMs;
+                while (!e && time < loop) {
+                    //如果没查到重试
+                    await delay(delayMs);
+                    console.log(new Date().toLocaleString() + " 开始重试 [loop = " + time + ";asin = " + asin + ";country = " + country + "]")
+                    result[i] = await reqShopInfo(asin, country);
+                    e = result[i];
+                    delayMs = delayMs * factor;
+                    time++;
+                }
+
+                if (e) {
+                    e.country = country_map_reverse.get(country).toString();
+                    await delay(2000);
+                    e.review = await reqShopReview(asin, country, e.review);
+                }
             }
         }
     }
 
-    //暂时延迟10min
-    await delay(60 * 10 * 1000);
-
-    for (let e of result) {
-        if (e && e.asin) {
-            //延迟2s
-            await delay(2000);
-            //获取review info
-            e.review = await reqShopReview(e.asin, e.country, e.review);
-            //换成中文
-            e.country = country_map_reverse.get(e.country).toString();
-        }
-
-        //不落表
-        // if (e && !e.fromDB) {
-        //     //保存result
-        //     const created = await prisma.amazon_goods_price.create({
-        //         data: {
-        //             asin: e.asin,
-        //             date: utils.formatDateYYYYMMDD(e.createDt),
-        //             basis_price: e.basisPrice === '' ? 0 : e.basisPrice,
-        //             offset_price: e.offsetPrice === '' ? 0 : e.offsetPrice,
-        //             delivery_price: e.deliveryPrice === '' ? 0 : e.deliveryPrice,
-        //             coupon: e.coupon,
-        //             coupon_unit: e.couponUnit,
-        //             remark: e.remark,
-        //             title: e.title,
-        //             brand: e.brand
-        //         },
-        //     });
-        //
-        //     var reviewTmp = e.review;
-        //
-        //     if (reviewTmp) {
-        //         const createdGoodsReview = await prisma.amazon_goods_review.create({
-        //             data: {
-        //                 asin: reviewTmp.asin,
-        //                 date: utils.formatDateYYYYMMDD(reviewTmp.createDt),
-        //                 sellers_rank_big: reviewTmp.sellersRankBig ? parseInt(reviewTmp.sellersRankBig) : 0,
-        //                 sellers_rank_small: reviewTmp.sellersRankSmall ? parseInt(reviewTmp.sellersRankSmall) : 0,
-        //                 ratings_total: reviewTmp.ratingsTotal ? parseInt(reviewTmp.ratingsTotal) : 0,
-        //                 ratings_count: reviewTmp.ratingsCount ? parseInt(reviewTmp.ratingsCount) : 0,
-        //                 ratings_review_count: reviewTmp.ratingsReviewCount ? parseInt(reviewTmp.ratingsReviewCount) : 0
-        //             },
-        //         });
-        //     }
-        // }
-    }
+    // for (let e of result) {
+    //不落表
+    // if (e && !e.fromDB) {
+    //     //保存result
+    //     const created = await prisma.amazon_goods_price.create({
+    //         data: {
+    //             asin: e.asin,
+    //             date: utils.formatDateYYYYMMDD(e.createDt),
+    //             basis_price: e.basisPrice === '' ? 0 : e.basisPrice,
+    //             offset_price: e.offsetPrice === '' ? 0 : e.offsetPrice,
+    //             delivery_price: e.deliveryPrice === '' ? 0 : e.deliveryPrice,
+    //             coupon: e.coupon,
+    //             coupon_unit: e.couponUnit,
+    //             remark: e.remark,
+    //             title: e.title,
+    //             brand: e.brand
+    //         },
+    //     });
+    //
+    //     var reviewTmp = e.review;
+    //
+    //     if (reviewTmp) {
+    //         const createdGoodsReview = await prisma.amazon_goods_review.create({
+    //             data: {
+    //                 asin: reviewTmp.asin,
+    //                 date: utils.formatDateYYYYMMDD(reviewTmp.createDt),
+    //                 sellers_rank_big: reviewTmp.sellersRankBig ? parseInt(reviewTmp.sellersRankBig) : 0,
+    //                 sellers_rank_small: reviewTmp.sellersRankSmall ? parseInt(reviewTmp.sellersRankSmall) : 0,
+    //                 ratings_total: reviewTmp.ratingsTotal ? parseInt(reviewTmp.ratingsTotal) : 0,
+    //                 ratings_count: reviewTmp.ratingsCount ? parseInt(reviewTmp.ratingsCount) : 0,
+    //                 ratings_review_count: reviewTmp.ratingsReviewCount ? parseInt(reviewTmp.ratingsReviewCount) : 0
+    //             },
+    //         });
+    //     }
+    // }
+    // }
     if (se) {
         await sendEmail(result);
     }
