@@ -203,8 +203,8 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
     var length = asinList.length;
     let factor: number = 1.5;
     let initMs: number = 2000;
-    let maxMs: number = 10 * 1000;
-    let loop: number = 5;
+    let maxMs: number = 60 * 1000;
+    let loop: number = 10;
     for (i = 0; i < length; i++) {
         let item = asinList[i];
         if (typeof item === 'string') {
