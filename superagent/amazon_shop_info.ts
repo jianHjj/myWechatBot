@@ -198,18 +198,23 @@ function getCouponPrice(offsetPrice: Decimal, coupon: Decimal, couponUnit: strin
  */
 export async function getShopInfo(asinList: any[], se: boolean, country: string): Promise<ShopInfo[] | undefined[]> {
     // 获取商品信息
-    let result: ShopInfo[] | undefined[] = [];
-    var i: number;
+
+    //局部常量
     var length = asinList.length;
     let factor: number = 1.5;
     let initMs: number = 2000;
     let maxMs: number = 60 * 1000;
+
+    //可变变量
+    let result: ShopInfo[] | undefined[] = [];
     let loop: number = 10;
-    for (i = 0; i < length; i++) {
+    let failureTime: number = 0;
+    let failureAsins = new Map();
+    for (let i = 0; i < length; i++) {
         let item = asinList[i];
         if (typeof item === 'string') {
             let asin: string = item;
-            if (asin) {
+            if (asin && asin.trim() !== '') {
                 asin = asin.trim();
                 await delay(2000);
                 //判断asin中是否携带中文地区
@@ -230,75 +235,82 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
                     country = country_map_reverse.keys().next().value;
                 }
                 result[i] = await reqShopInfo(asin, country);
-                let e = result[i];
-                let time: number = 0;
-                let delayMs: number = initMs;
-                while ((!e || !e.first || e.first === '') && time < loop) {
-                    //如果没查到重试
-                    await delay(delayMs);
-                    let emptyPrice = !e || !e.first || e.first === '';
-                    console.log(new Date().toLocaleString() + " [asin = " + asin + ";emptyPrice = " + emptyPrice + "]")
-                    console.log(new Date().toLocaleString() + " 开始重试 [loop = " + time + ";asin = " + asin + ";country = " + country + "]")
-                    result[i] = await reqShopInfo(asin, country);
-                    e = result[i];
-                    delayMs = delayMs * factor;
-                    if (delayMs > maxMs) {
-                        delayMs = maxMs;
-                    }
-                    time++;
-                }
 
+                //按照失败次数递增loop
+                loop = failureTime > 0 ? Math.trunc(loop + failureTime / 2) : loop;
+
+                //尝试重试
+                await retry(result, i, asin, country);
+
+                let e = result[i];
                 if (e) {
-                    e.country = country_map_reverse.get(country).toString();
                     await delay(2000);
                     e.review = await reqShopReview(asin, country, e.review);
                 }
 
                 let price = e ? e.first : "";
-                console.log(new Date().toLocaleString() + " [asin = " + asin + ";price = " + price + "]");
+                console.log(new Date().toLocaleString() + " 最终获取结果 [asin = " + asin + ";price = " + price + "]");
+
+                if (!price || price === '') {
+                    //记录失败次数
+                    failureAsins.set(i, asin);
+                    failureTime++;
+                    console.log(new Date().toLocaleString() + " 当前最新失败情况 [failureAsins = " + JSON.stringify(failureAsins) + ";failureTime = " + failureTime + "]");
+                }
             }
         }
     }
 
-    // for (let e of result) {
-    //不落表
-    // if (e && !e.fromDB) {
-    //     //保存result
-    //     const created = await prisma.amazon_goods_price.create({
-    //         data: {
-    //             asin: e.asin,
-    //             date: utils.formatDateYYYYMMDD(e.createDt),
-    //             basis_price: e.basisPrice === '' ? 0 : e.basisPrice,
-    //             offset_price: e.offsetPrice === '' ? 0 : e.offsetPrice,
-    //             delivery_price: e.deliveryPrice === '' ? 0 : e.deliveryPrice,
-    //             coupon: e.coupon,
-    //             coupon_unit: e.couponUnit,
-    //             remark: e.remark,
-    //             title: e.title,
-    //             brand: e.brand
-    //         },
-    //     });
-    //
-    //     var reviewTmp = e.review;
-    //
-    //     if (reviewTmp) {
-    //         const createdGoodsReview = await prisma.amazon_goods_review.create({
-    //             data: {
-    //                 asin: reviewTmp.asin,
-    //                 date: utils.formatDateYYYYMMDD(reviewTmp.createDt),
-    //                 sellers_rank_big: reviewTmp.sellersRankBig ? parseInt(reviewTmp.sellersRankBig) : 0,
-    //                 sellers_rank_small: reviewTmp.sellersRankSmall ? parseInt(reviewTmp.sellersRankSmall) : 0,
-    //                 ratings_total: reviewTmp.ratingsTotal ? parseInt(reviewTmp.ratingsTotal) : 0,
-    //                 ratings_count: reviewTmp.ratingsCount ? parseInt(reviewTmp.ratingsCount) : 0,
-    //                 ratings_review_count: reviewTmp.ratingsReviewCount ? parseInt(reviewTmp.ratingsReviewCount) : 0
-    //             },
-    //         });
-    //     }
-    // }
-    // }
+    //是否有失败的asin
+    if (failureAsins.size > 0 && failureTime > 0) {
+        console.log(new Date().toLocaleString() + " 二次重试 [failureAsins = " + JSON.stringify(failureAsins) + ";failureTime = " + failureTime + "]")
+        let rLength: number = result.length;
+        for (let i = 0; i < rLength; i++) {
+            let e = result[i];
+            if (e) {
+                let countryInner = e.country;
+                let failureAsin = failureAsins.get(i);
+                if (failureAsin) {
+                    //开始重试
+                    loop = 10;
+                    await retry(result, i, failureAsin, countryInner);
+                }
+
+                let price = e ? e.first : "";
+                console.log(new Date().toLocaleString() + " 二次重试 最终获取结果 [asin = " + failureAsin + ";price = " + price + "]");
+
+                e.country = country_map_reverse.get(countryInner).toString();
+            }
+        }
+    }
+
     if (se) {
         await sendEmail(result);
     }
+
+    //方法内函数
+    async function retry(result: ShopInfo[], i: number, failureAsin: string, countryInner: string) {
+        result[i] = await reqShopInfo(failureAsin, countryInner);
+        let e = result[i];
+        let time: number = 1;
+        let delayMs: number = initMs;
+        while ((!e || !e.first || e.first === '') && time <= loop) {
+            //如果没查到重试
+            let emptyPrice = !e || !e.first || e.first === '';
+            let price = e ? e.first : "";
+            console.log(new Date().toLocaleString() + " 获取结果 [asin = " + failureAsin + ";price = " + price + ";emptyPrice = " + emptyPrice + "]")
+            console.log(new Date().toLocaleString() + " 开始重试 [loop = " + time + ";asin = " + failureAsin + ";country = " + countryInner + "]")
+            await delay(delayMs);
+            result[i] = await reqShopInfo(failureAsin, countryInner);
+            e = result[i];
+            delayMs = delayMs * factor;
+            if (delayMs > maxMs) {
+                delayMs = maxMs;
+            }
+            time++;
+        }
+    }
+
     return result;
 }
 
