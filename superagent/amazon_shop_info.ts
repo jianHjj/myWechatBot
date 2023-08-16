@@ -201,9 +201,10 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
 
     //局部常量
     var length = asinList.length;
-    let factor: number = 1.5;
-    let initMs: number = 2000;
+    let factor: number = 0.1;
+    let initMs: number = 40 * 1000;
     let maxMs: number = 60 * 1000;
+    let minMs: number = 2 * 1000;
 
     //可变变量
     let result: ShopInfo[] | undefined[] = [];
@@ -237,7 +238,7 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
                 result[i] = await reqShopInfo(asin, country);
 
                 //按照失败次数递增loop
-                loop = failureTime > 0 ? Math.trunc(loop + failureTime / 2) : loop;
+                // loop = failureTime > 0 ? Math.trunc(loop + failureTime / 2) : loop;
 
                 //尝试重试
                 await retry(result, i, asin, country);
@@ -263,6 +264,9 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
 
     //是否有失败的asin
     if (failureAsins.size > 0 && failureTime > 0) {
+        //二次重试局部变量
+        loop = 1;
+        initMs = 20 * 1000;
         console.log(new Date().toLocaleString() + " 二次重试 [failureAsins = " + JSON.stringify(failureAsins) + ";failureTime = " + failureTime + "]")
         let rLength: number = result.length;
         for (let i = 0; i < rLength; i++) {
@@ -272,7 +276,6 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
                 let failureAsin = failureAsins.get(i);
                 if (failureAsin) {
                     //开始重试
-                    loop = 10;
                     await retry(result, i, failureAsin, countryInner);
                 }
 
@@ -306,6 +309,9 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
             delayMs = delayMs * factor;
             if (delayMs > maxMs) {
                 delayMs = maxMs;
+            }
+            if (delayMs < minMs) {
+                delayMs = minMs;
             }
             time++;
         }
