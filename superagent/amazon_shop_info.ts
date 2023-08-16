@@ -241,6 +241,7 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
                 // loop = failureTime > 0 ? Math.trunc(loop + failureTime / 2) : loop;
 
                 //尝试重试
+                await delay(2000);
                 await retry(result, i, asin, country);
 
                 let e = result[i];
@@ -276,6 +277,7 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
                 let failureAsin = failureAsins.get(i);
                 if (failureAsin) {
                     //开始重试
+                    await delay(2000);
                     await retry(result, i, failureAsin, countryInner);
                 }
 
