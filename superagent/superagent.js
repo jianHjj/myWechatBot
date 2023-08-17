@@ -28,7 +28,9 @@ function req({url, method, params, data, cookies, spider = false, platform = 'tx
                     reject(err)
                 }
                 if (spider) { // 如果是爬取内容，直接返回页面html
-                    resolve(response.text)
+                    if (response.text) {
+                        resolve(response.text);
+                    }
                 } else { // 如果是非爬虫，返回格式化后的内容
                     const res = JSON.parse(response.text);
                     if (res.code !== 200 && platform === 'tx' || res.code !== 100000 && platform === 'tl') {
