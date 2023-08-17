@@ -267,8 +267,8 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
     //是否有失败的asin
     if (failureAsins.size > 0 && failureTime > 0) {
         //二次重试局部变量
-        loop = 10;
-        initMs = 20 * 1000;
+        loop = 20;
+        initMs = 2 * 1000;
         let json = JSON.stringify(failureAsins);
         console.log(new Date().toLocaleString() + " 二次重试 [failureAsins = " + json + ";failureTime = " + failureTime + "]")
         let rLength: number = result.length;
