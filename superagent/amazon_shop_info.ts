@@ -281,13 +281,17 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
                     //开始重试
                     await delay(2000);
                     await retry(result, i, failureAsin, countryInner);
+                    let price = result[i] ? result[i].first : "";
+                    console.log(new Date().toLocaleString() + " 二次重试 最终获取结果 [asin = " + failureAsin + ";price = " + price + "]");
                 }
-
-                let price = e ? e.first : "";
-                console.log(new Date().toLocaleString() + " 二次重试 最终获取结果 [asin = " + failureAsin + ";price = " + price + "]");
-
-                e.country = country_map_reverse.get(countryInner).toString();
             }
+        }
+    }
+
+    let rLength: number = result.length;
+    for (let i = 0; i < rLength; i++) {
+        if (result[i]) {
+            result[i].country = country_map_reverse.get(result[i].country).toString();
         }
     }
 
