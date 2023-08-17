@@ -18,13 +18,16 @@ var proxy = process.env.http_proxy || 'http://127.0.0.1:10810';
 function req({url, method, params, data, cookies, spider = false, platform = 'tx'}) {
     return new Promise(function (resolve, reject) {
         superagent(method, url)
+            .timeout({
+              response: 3000,  // Wait 3 seconds for the server to start sending,
+              deadline: 60000, // but allow 1 minute for the file to finish loading.
+            })
             .query(params)
             .proxy(proxy)
             .send(data)
             .set('Content-Type', 'application/x-www-form-urlencoded')
             .end(function (err, response) {
                 if (err) {
-                    console.log('请求出错', err)
                     reject(err)
                 }
                 if (spider) { // 如果是爬取内容，直接返回页面html
