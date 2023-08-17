@@ -299,6 +299,10 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
                 let failureAsin = failureAsins.get(i);
                 if (failureAsin) {
                     //开始重试
+                    //如果都爬到小排名 那么价格为空是正常的
+                    if (e.review && e.review.sellersRankSmall && e.review.sellersRankSmall !== '') {
+                        continue;
+                    }
                     await delay(2000);
                     await retry(result, i, failureAsin, countryInner);
                     let price = result[i] ? result[i].first : "";
