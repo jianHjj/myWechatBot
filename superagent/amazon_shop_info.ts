@@ -241,8 +241,8 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
                 // loop = failureTime > 0 ? Math.trunc(loop + failureTime / 2) : loop;
 
                 //尝试重试
-                await delay(2000);
-                await retry(result, i, asin, country);
+                // await delay(2000);
+                // await retry(result, i, asin, country);
 
                 let e = result[i];
                 if (e) {
@@ -257,7 +257,8 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
                     //记录失败次数
                     failureAsins.set(i, asin);
                     failureTime++;
-                    console.log(new Date().toLocaleString() + " 当前最新失败情况 [failureAsins = " + JSON.stringify(failureAsins) + ";failureTime = " + failureTime + "]");
+                    let json = JSON.stringify(failureAsins);
+                    console.log(new Date().toLocaleString() + " 当前最新失败情况 [failureAsins = " + json + ";failureTime = " + failureTime + "]");
                 }
             }
         }
@@ -266,9 +267,10 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
     //是否有失败的asin
     if (failureAsins.size > 0 && failureTime > 0) {
         //二次重试局部变量
-        loop = 1;
+        loop = 10;
         initMs = 20 * 1000;
-        console.log(new Date().toLocaleString() + " 二次重试 [failureAsins = " + JSON.stringify(failureAsins) + ";failureTime = " + failureTime + "]")
+        let json = JSON.stringify(failureAsins);
+        console.log(new Date().toLocaleString() + " 二次重试 [failureAsins = " + json + ";failureTime = " + failureTime + "]")
         let rLength: number = result.length;
         for (let i = 0; i < rLength; i++) {
             let e = result[i];
