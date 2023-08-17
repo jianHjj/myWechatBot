@@ -142,12 +142,12 @@ export class ShopInfo {
                 fromDB?: boolean) {
         this.asin = asin;
         this.first = first;
-        this.basisPrice = basisPrice.replace(',', '');
-        this.offset = offset.replace(',', '');
-        this.offsetPrice = offsetPrice.replace(',', '');
+        this.basisPrice = basisPrice ? basisPrice.replace(',', '') : '';
+        this.offset = offset ? offset.replace(',', '') : '';
+        this.offsetPrice = offsetPrice ? offsetPrice.replace(',', '') : '';
         this.coupon = coupon;
         this.couponUnit = couponUnit;
-        this.deliveryPrice = deliveryPrice.replace(',', '');
+        this.deliveryPrice = deliveryPrice ? deliveryPrice.replace(',', '') : '';
         this.remark = remark;
         this.title = title;
         this.brand = brand;
