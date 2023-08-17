@@ -105,7 +105,11 @@ export class ShopInfo {
     //封面URL地址
     coverUrl: string;
 
-    // 构造函数
+    // default
+    constructor();
+
+    constructor(asin: string);
+
     constructor(asin: string,
                 first: string,
                 basisPrice: string,
@@ -119,6 +123,22 @@ export class ShopInfo {
                 brand: string,
                 url: string,
                 coverUrl: string,
+                fromDB?: boolean);
+
+    // 构造函数
+    constructor(asin?: string,
+                first?: string,
+                basisPrice?: string,
+                offset?: string,
+                offsetPrice?: string,
+                coupon?: number,
+                couponUnit?: string,
+                deliveryPrice?: string,
+                remark?: string,
+                title?: string,
+                brand?: string,
+                url?: string,
+                coverUrl?: string,
                 fromDB?: boolean) {
         this.asin = asin;
         this.first = first;
@@ -459,10 +479,13 @@ async function reqShopInfo(asin: string, country: string): Promise<ShopInfo | un
 
     let shopInfo: ShopInfo | undefined = await reqShopInfoByUrl(asin, url);
 
-    if (shopInfo) {
-        //默认值设置
-        shopInfo.country = country;
+    if (!shopInfo) {
+        //新建一个默认对象
+        shopInfo = new ShopInfo(asin);
     }
+
+    //默认值设置
+    shopInfo.country = country;
 
     //特殊处理，部分地区不计算运费
     if (shopInfo && shopInfo.first != OUT_OF_STOCK) {
