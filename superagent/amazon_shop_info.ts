@@ -798,7 +798,12 @@ async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | u
         }
         return shopInfo;
     } catch (err) {
-        console.log('获取商品信息出错', err);
+        if (err) {
+            console.log(new Date().toLocaleString() + ' error 获取商品信息出错 ' + err.message + ' [asin = ' + asin + ']');
+            if (err.status && err.status === 404) {
+                return new ShopInfo(asin, '商品不存在', '', '', '', 0, '', '', '', '', '', url, '');
+            }
+        }
     }
     return undefined;
 }
