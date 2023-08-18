@@ -6,6 +6,10 @@ var proxy = process.env.http_proxy || 'http://127.0.0.1:10810';
 
 let cookieMap = new Map();
 
+let defaultCookieMap = new Map();
+defaultCookieMap.set('usa', 'session-id=132-9578608-3161013; session-id-time=2082787201l; i18n-prefs=USD; ubid-main=134-7272345-3685851; lc-main=en_US; session-token="DxIPMU7gynIZOmY3KCZmHavmijHrE51p1LgLx3W8qzjmIiaIC8sdAfvGRCJnz03dUIsfMADb9IPtTuMx2f8/WCAER/Oz/AbqNMoZar5AjjA1jgnKABJxuVwesu/gYV2CqFHNu5QDNJhFqdQZ7bC70nHzGDr8w91DToXheGKDX4Aka4R9pktb0jYrO9R9JnGLUiEU4bLwNJf4qUN0N00Al0VdFBeeB46UU6tszURQTOk="; csm-hit=tb:s-ZSBMZ4CMSYHMETT7FQBK|1692342327655&t:1692342330443&adb:adblk_unk');
+defaultCookieMap.set('canada','session-id=137-9601198-8117855; session-id-time=2082787201l; i18n-prefs=CAD; notice28=0; ubid-acbca=134-4568679-1927410; lc-acbca=en_CA; session-token=ey6RQlfXOT3vDpELw01XDI/plfYESdGKlxWjl1RQWSI7sYkbDgS6I79H65uNwChoBzvZN57u9C75hq/DuNA4AguRyV9J8AMMIB76nOxw4KsJiAkvHwj8D37CPF5xSAH0zCd5LurNv9XGJTYepqZEQGT/0+aARAv1kTtUT6I6VL3jBuLwqch2VM3mUED46aqK7jiElr0wwQv4MdJpF17utPjmgq0O1vdC2xCkJdI/RzY=; csm-hit=tb:F9MKKQ231NESAEBND1DQ+s-F9MKKQ231NESAEBND1DQ|1692342529447&t:1692342529447&adb:adblk_unk');
+
 /**
  *
  * @param url 请求地址
@@ -40,6 +44,27 @@ function req({url, method, params, data, domain, cookies, spider = false, platfo
                 if (spider) { // 如果是爬取内容，直接返回页面html
                     if (response && response.text) {
                         resolve(response.text);
+
+                        if (response.text.length < 10000) {
+                            //爬取失败
+                            console.log(new Date().toLocaleString() + " error 弹出人机验证页 [url = " + url + "]");
+                            let cookieCache = cookieMap.get(domain);
+                            let defaultCookie = defaultCookieMap.get(domain);
+                            if (cookieCache && cookieCache !== defaultCookie) {
+                                //当前cookie失效 and 当前cookie不等于默认cookie
+                                if (defaultCookie && defaultCookie !== '') {
+                                    //设置成默认cookie
+                                    console.log(new Date().toLocaleString() + " warn 设置成默认cookie [url = " + url + "]");
+                                    cookieMap.set(domain, defaultCookie);
+                                }
+                            }
+
+                            if (cookieCache === defaultCookie) {
+                                //如果是默认cookie爬取失败将cookie设置为空
+                                console.log(new Date().toLocaleString() + " warn 将cookie设置为空 [url = " + url + "]");
+                                cookieMap.set(domain, '');
+                            }
+                        }
 
                         //获取cookie
                         let cookieTemp = response.headers["set-cookie"];
