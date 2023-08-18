@@ -40,6 +40,7 @@ function req({url, method, params, data, cookies, spider = false, platform = 'tx
 
                         //获取cookie
                         cookie = response.headers["set-cookie"];
+                        cookie = cookie && cookie !== '' ? cookie : '';
                     }
                 } else { // 如果是非爬虫，返回格式化后的内容
                     const res = JSON.parse(response.text);
