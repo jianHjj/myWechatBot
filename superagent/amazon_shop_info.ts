@@ -481,7 +481,7 @@ async function reqShopInfo(asin: string, country: string): Promise<ShopInfo | un
     }
     var url: string = shopUrl.url_shop_info.replace("{ASIN}", asin);
 
-    let shopInfo: ShopInfo | undefined = await reqShopInfoByUrl(asin, url);
+    let shopInfo: ShopInfo | undefined = await reqShopInfoByUrl(asin, url, country);
 
     if (!shopInfo) {
         //新建一个默认对象
@@ -511,9 +511,9 @@ async function reqShopInfo(asin: string, country: string): Promise<ShopInfo | un
 }
 
 
-async function reqShopInfoByUrl(asin: string, url: string): Promise<ShopInfo | undefined> {
+async function reqShopInfoByUrl(asin: string, url: string, domain: string): Promise<ShopInfo | undefined> {
     try {
-        let res = await superagent.req({url: url, method: 'GET', spider: true});
+        let res = await superagent.req({url: url, method: 'GET', domain: domain, spider: true});
         let $ = cheerio.load(res);
         //价格信息
         let shopInfo = undefined;
@@ -822,7 +822,7 @@ async function reqShopReview(asin: string, country: string, review?: ShopReviewI
             throw new Error("地区不存在！请检查地区是否合法");
         }
         var url: string = shopUrl.url_shop_review.replace("{ASIN}", asin)
-        let res = await superagent.req({url: url, method: 'GET', spider: true});
+        let res = await superagent.req({url: url, method: 'GET', domain: country, spider: true});
         let $ = cheerio.load(res);
 
         //获取评论数

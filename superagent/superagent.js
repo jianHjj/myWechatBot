@@ -4,7 +4,7 @@ require('superagent-proxy')(superagent)
 
 var proxy = process.env.http_proxy || 'http://127.0.0.1:10810';
 
-let cookie = '';
+let cookieMap = new Map();
 
 /**
  *
@@ -12,12 +12,15 @@ let cookie = '';
  * @param method 请求方法
  * @param params 请求参数
  * @param data 请求body
+ * @param domain 域名 or 其它关键字
  * @param cookies cookies
  * @param spider 是否需要爬取数据
  * @param platform 请求哪个平台 tx 天行数据  tl 图灵机器人
  * @returns {Promise}
  */
-function req({url, method, params, data, cookies, spider = false, platform = 'tx'}) {
+function req({url, method, params, data, domain, cookies, spider = false, platform = 'tx'}) {
+    let cookieTemp = cookieMap.get(domain);
+    let cookie = cookieTemp && cookieTemp !== '' ? cookieTemp : '';
     return new Promise(function (resolve, reject) {
         superagent(method, url)
             .timeout({
@@ -40,8 +43,10 @@ function req({url, method, params, data, cookies, spider = false, platform = 'tx
 
                         //获取cookie
                         let cookieTemp = response.headers["set-cookie"];
-                        if (!cookie || cookie === '') {
-                            cookie = cookieTemp && cookieTemp !== '' ? cookieTemp : '';
+                        let cookieCache = cookieMap.get(domain);
+                        if (!cookieCache || cookieCache === '') {
+                            let c = cookieTemp && cookieTemp !== '' ? cookieTemp : '';
+                            cookieMap.set(domain, c);
                         }
                     }
                 } else { // 如果是非爬虫，返回格式化后的内容
