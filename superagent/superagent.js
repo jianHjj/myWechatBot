@@ -39,8 +39,10 @@ function req({url, method, params, data, cookies, spider = false, platform = 'tx
                         resolve(response.text);
 
                         //获取cookie
-                        cookie = response.headers["set-cookie"];
-                        cookie = cookie && cookie !== '' ? cookie : '';
+                        let cookieTemp = response.headers["set-cookie"];
+                        if (!cookie || cookie === '') {
+                            cookie = cookieTemp && cookieTemp !== '' ? cookieTemp : '';
+                        }
                     }
                 } else { // 如果是非爬虫，返回格式化后的内容
                     const res = JSON.parse(response.text);
