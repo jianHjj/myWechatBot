@@ -453,15 +453,21 @@ async function sendEmail(shopInfoList: ShopInfo[] | undefined[]): Promise<void> 
 const CHAR_PERCENT: string = '%';
 /*欧元符号*/
 const EURO_CHAR: string = '€';
+
+//table key
 /*排名 talbe->th 内容*/
 const RANK_DESC: string = 'Best Sellers Rank';
+/*品牌名*/
+const BRAND_NAME: string = 'Brand Name';
 /*桌子类商品的小排名*/
 const HOME_OFFICE_DESKS: string = 'Home Office Desks';
 /*花园软管卷盘小排名*/
 const GARDEN_HOSE_REELS: string = 'Garden Hose Reels';
 /*电动桌小排名*/
 const COMPUTER_WORKSTATIONS: string = 'Computer Workstations';
+/*asin*/
 const ASIN: string = 'ASIN';
+//table key END
 
 //拼接优惠券信息
 function concatCouponPrice(s: string, couponPrice: string | any) {
@@ -481,12 +487,7 @@ async function reqShopInfo(asin: string, country: string): Promise<ShopInfo | un
     }
     var url: string = shopUrl.url_shop_info.replace("{ASIN}", asin);
 
-    let shopInfo: ShopInfo | undefined = await reqShopInfoByUrl(asin, url, country);
-
-    if (!shopInfo) {
-        //新建一个默认对象
-        shopInfo = new ShopInfo(asin);
-    }
+    let shopInfo: ShopInfo = await reqShopInfoByUrl(asin, url, country);
 
     //默认值设置
     shopInfo.country = country;
@@ -511,12 +512,12 @@ async function reqShopInfo(asin: string, country: string): Promise<ShopInfo | un
 }
 
 
-async function reqShopInfoByUrl(asin: string, url: string, domain: string): Promise<ShopInfo | undefined> {
+async function reqShopInfoByUrl(asin: string, url: string, domain: string): Promise<ShopInfo> {
+    let shopInfo = new ShopInfo(asin);
     try {
+        //请求amazon
         let res = await superagent.req({url: url, method: 'GET', domain: domain, spider: true});
         let $ = cheerio.load(res);
-        //价格信息
-        let shopInfo = undefined;
         //货币符号 默认美元
         let charDollar: string = '$';
         let price = $('#corePriceDisplay_desktop_feature_div');
@@ -677,8 +678,8 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
             .replace('ratings', '')
             .replace(',', '').trim();
 
-        //获取商品详情
-        var table = $('#productDetails_detailBullets_sections1');
+        //获取商品额外信息 Additional Information
+        let table = $('#productDetails_detailBullets_sections1');
         let tdArray = table.find('td');
         let thArray = table.find('th');
         var tableLength = thArray.length;
@@ -749,11 +750,30 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
                 break;
             }
 
+            //如果商品信息存在 从table列表中二次匹配asin
             if (th.includes(ASIN)) {
                 let asin_code: string = tdArray.eq(i).text().trim();
-                if (asin !== asin_code && shopInfo) {
+                if (asin !== asin_code) {
                     shopInfo.first = OUT_OF_STOCK;
                     shopInfo.remark = shopInfo.first;
+                }
+            }
+        }
+
+        //商品工艺详情 Technical Details
+        let technicalDetailTable = $('#productDetails_techSpec_section_1');
+        let technicalDetailTdArray = technicalDetailTable.find('td');
+        let technicalDetailThArray = technicalDetailTable.find('th');
+        let technicalDetailTableLength = technicalDetailThArray.length;
+        for (let i = 0; i < technicalDetailTableLength; i++) {
+            let th: string = technicalDetailThArray.eq(i).text();
+            if (!shopInfo.brand || shopInfo.brand === '') {
+                //补充品牌名
+                if (th.includes(BRAND_NAME)) {
+                    let brand_name: string = technicalDetailTdArray.eq(i).text().trim();
+                    if (brand_name) {
+                        shopInfo.brand = brand_name;
+                    }
                 }
             }
         }
@@ -793,9 +813,8 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
             }
         }
 
-        if (shopInfo) {
-            shopInfo.review = new ShopReviewInfo(asin, topBig, topSmall, ratingsTotal, ratingsCount, '');
-        }
+        //商品review
+        shopInfo.review = new ShopReviewInfo(asin, topBig, topSmall, ratingsTotal, ratingsCount, '');
         return shopInfo;
     } catch (err) {
         if (err) {
@@ -805,7 +824,8 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
             }
         }
     }
-    return undefined;
+    //程序执行到这里有两种情况 1、页面基本布局变更;2、捕获到程序异常
+    return shopInfo;
 }
 
 
