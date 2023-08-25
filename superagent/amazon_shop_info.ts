@@ -662,6 +662,15 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
                     }
                 }
             }
+
+            if (!brand) {
+                brand = $('#productOverview_feature_div')
+                    .find('div')
+                    .find('div.po-brand')
+                    .find('span.po-break-word')
+                    .text().trim();
+            }
+
             title = $('#productTitle').text().trim();
 
             //获取封面
@@ -767,7 +776,7 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
         let technicalDetailTableLength = technicalDetailThArray.length;
         for (let i = 0; i < technicalDetailTableLength; i++) {
             let th: string = technicalDetailThArray.eq(i).text();
-            if (!shopInfo.brand || shopInfo.brand === '') {
+            if (!shopInfo.brand) {
                 //补充品牌名
                 if (th.includes(BRAND_NAME)) {
                     let brand_name: string = technicalDetailTdArray.eq(i).text().trim();
