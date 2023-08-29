@@ -23,7 +23,7 @@ class ShopUrl {
  * 美国站URL
  */
 const usa_url: ShopUrl = {
-    url_shop_info: 'https://www.amazon.com/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/dp/{ASIN}/ref=cm_cr_arp_d_product_top?ie=UTF8',
+    url_shop_info: 'https://www.amazon.com/dp/{ASIN}/ref=cm_cr_arp_d_product_top?ie=UTF8',
     url_shop_review: 'https://www.amazon.com/product-reviews/{ASIN}/ref=cm_cr_arp_d_show_all?ie=UTF8&reviewerType=all_reviews&pageNumber=1#reviews-filter-bar'
 }
 
@@ -31,7 +31,7 @@ const usa_url: ShopUrl = {
  * 加拿大站URL
  */
 const canada_url: ShopUrl = {
-    url_shop_info: 'https://www.amazon.ca/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/dp/{ASIN}/ref=cm_cr_arp_d_product_top?ie=UTF8',
+    url_shop_info: 'https://www.amazon.ca/dp/{ASIN}/ref=cm_cr_arp_d_product_top?ie=UTF8',
     url_shop_review: 'https://www.amazon.ca/product-reviews/{ASIN}/ref=cm_cr_arp_d_show_all?ie=UTF8&reviewerType=all_reviews&pageNumber=1#reviews-filter-bar'
 }
 
@@ -39,7 +39,7 @@ const canada_url: ShopUrl = {
  * 德国站URL
  */
 const de_url: ShopUrl = {
-    url_shop_info: 'https://www.amazon.de/-/en/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/dp/{ASIN}/ref=cm_cr_arp_d_product_top?ie=UTF8&deliveryCountryCode=DE',
+    url_shop_info: 'https://www.amazon.de/-/en/dp/{ASIN}/ref=cm_cr_arp_d_product_top?ie=UTF8&deliveryCountryCode=DE',
     url_shop_review: 'https://www.amazon.de/-/en/product-reviews/{ASIN}/ref=cm_cr_arp_d_show_all?ie=UTF8&reviewerType=all_reviews&deliveryCountryCode=DE#reviews-filter-bar'
 }
 
@@ -47,7 +47,7 @@ const de_url: ShopUrl = {
  * 英国站URL
  */
 const uk_url: ShopUrl = {
-    url_shop_info: 'https://www.amazon.co.uk/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/dp/{ASIN}/ref=cm_cr_arp_d_product_top?ie=UTF8&deliveryCountryCode=GB',
+    url_shop_info: 'https://www.amazon.co.uk/dp/{ASIN}/ref=cm_cr_arp_d_product_top?ie=UTF8&deliveryCountryCode=GB',
     url_shop_review: 'https://www.amazon.co.uk/product-reviews/{ASIN}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews&deliveryCountryCode=GB#reviews-filter-bar'
 }
 
