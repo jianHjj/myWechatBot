@@ -5,6 +5,7 @@ const restify = require('restify');
 const amazon_shop_info = require('../superagent/amazon_shop_info');
 const amazon_best_sellers = require('../superagent/amazon_best_sellers');
 const openai_client = require('../superagent/openai_client');
+const superagent = require('../superagent/superagent');
 const server = restify.createServer();
 const env = require('../utils/env');
 const constants = require('./constants.js');
@@ -161,6 +162,20 @@ server.post('/openai/say', async (req: any, res: any, next: any): Promise<any> =
     } finally {
         lock = false;
     }
+})
+
+server.post('/amazon/setCookies', async (req: any, res: any, next: any): Promise<any> => {
+    try {
+        let content: string[] | undefined = req.body.content;
+        let domain: string[] | undefined = req.body.domain;
+        if (content && domain) {
+            await superagent.setCookies({domain: domain, cookies: content});
+            res.send("设置成功！");
+        }
+    } catch (e) {
+        res.send("设置失败！error=" + e);
+    }
+    return next();
 })
 
 server.listen(3001, function (): void {

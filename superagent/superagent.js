@@ -6,6 +6,8 @@ var proxy = process.env.http_proxy || 'http://127.0.0.1:10810';
 
 let cookieMap = new Map();
 
+cookieMap.set('usa',['x-amz-captcha-1=1693294832226179; path=/; expires=Wed, 28-Aug-2024 05:40:32 GMT','x-amz-captcha-2=3lG7VePtwyRcV9OOQg48sA==; path=/; expires=Wed, 28-Aug-2024 05:40:32 GMT']);
+
 const mailer = require("../utils/emailer");
 const env = require('../utils/env');
 
@@ -13,6 +15,14 @@ const env = require('../utils/env');
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 let sendDt;
+
+// const session_id = 'session-id';
+// const ubid_main = 'ubid-main';
+// const session_id_time = 'session-id-time';
+// const i18n_prefs = 'i18n-prefs';
+// const sp_cdn = 'sp-cdn';
+// const session_token = 'session-token';
+
 /**
  *
  * @param url 请求地址
@@ -86,23 +96,12 @@ function req({url, method, params, data, domain, cookies, spider = false, platfo
                         //获取cookie
                         let cookieTemp = response.headers["set-cookie"];
                         let cookieCache = cookieMap.get(domain);
-                        let expiresTemp = getCookieValue(cookieTemp,'Expires');
-                        let expiresCache = getCookieValue(cookieCache,'Expires');
-                        if (expiresTemp) {
-                            //对比过期时间
-                            if (!expiresCache || expiresTemp > expiresCache) {
-                                //过期时间为空 or 过期时间小于最新cookie 更新cookie
-                                console.log(new Date().toLocaleString() + " info 更新cookie");
-                                cookieMap.set(domain, cookieTemp);
-                            }
-                        }
+                        cookieMap.set(domain, checkExpire(cookieTemp,cookieCache));
 
-                        //防止设置失败，二次判断
+                        //防止设置失败，避免直接set undefined
                         cookieCache = cookieMap.get(domain);
-                        if (!cookieCache || cookieCache === '') {
-                            let c = cookieTemp && cookieTemp !== '' ? cookieTemp : '';
-                            console.log(new Date().toLocaleString() + " info 首次缓存cookie");
-                            cookieMap.set(domain, c);
+                        if (!cookieCache) {
+                            cookieMap.set(domain, '');
                         }
                     }
                 } else { // 如果是非爬虫，返回格式化后的内容
@@ -116,24 +115,92 @@ function req({url, method, params, data, domain, cookies, spider = false, platfo
     })
 }
 
-function getCookieValue(cookieHeaders, cookieName) {
-    if (cookieHeaders) {
-        for (let i = 0; i < cookieHeaders.length; i++) {
-            const cookieHeader = cookieHeaders[i];
-            if (cookieHeader) {
-                const cookies = cookieHeader.split(';');
-                for (const cookie of cookies) {
-                    const [name, value] = cookie.trim().split('=');
-                    if (name === cookieName) {
-                        return value;
-                    }
-                }
+function getCookieValue(cookieHeader, cookieName) {
+    if (cookieHeader) {
+        const cookies = cookieHeader.split(';');
+        for (const cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name && cookieName
+                && name.toLowerCase() === cookieName.toLowerCase()) {
+                return value;
             }
         }
     }
     return null;
 }
 
+function checkExpire(cookieTempArray, cookieCacheArray) {
+    let newCookies = cookieCacheArray;
+
+    if (!newCookies) {
+        //如果缓存为空 直接返回temp
+        if (cookieTempArray) {
+          console.log(new Date().toLocaleString() + " info 首次缓存cookie");
+        }
+        return cookieTempArray;
+    }
+
+    let expire = 'Expires';
+    let idx = newCookies.length;
+
+    //开始更新缓存
+    if (cookieTempArray && cookieTempArray.length > 0) {
+        for (let i = 0; i < cookieTempArray.length; i++) {
+            const cookieTempHeader = cookieTempArray[i];
+            if (cookieTempHeader) {
+                const cookieTempSplit = cookieTempHeader.split('=');
+                if (cookieTempSplit && cookieTempSplit.length >= 1) {
+                    let firstKey = cookieTempSplit[0] ? cookieTempSplit[0].trim() : '';
+                    let expireCache = '';
+                    let cookieCacheHeader = '';
+                    let cookieCacheIdx = '';
+                    for (let i = 0; i < cookieCacheArray.length; i++) {
+                        cookieCacheHeader = cookieCacheArray[i];
+                        if (cookieCacheHeader) {
+                            const cookieCacheSplit = cookieCacheHeader.split('=');
+                            if (cookieCacheSplit && cookieCacheSplit.length >= 1) {
+                                let firstKey2 = cookieCacheSplit[0];
+                                if (firstKey2 && firstKey2.trim() === firstKey) {
+                                    expireCache = getCookieValue(cookieCacheHeader, expire);
+                                    cookieCacheIdx = i;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (expireCache) {
+                        //存在过期时间
+                        let expireTemp = getCookieValue(cookieTempHeader, expire);
+                        if (expireTemp && expireTemp > expireCache) {
+                            newCookies[cookieCacheIdx] = cookieTempHeader;
+                        }
+                    } else {
+                        //新增cookies
+                        newCookies[idx] = cookieTempHeader;
+                        idx++;
+                    }
+                }
+            }
+        }
+    }
+    return newCookies;
+}
+
+/**
+ * 设置cookie
+ * @param domain
+ * @param cookies
+ */
+function setCookies({domain, cookies}) {
+    if (!cookies) {
+        return;
+    }
+
+    cookieMap.set(domain, checkExpire(cookies, cookieMap.get(domain)));
+}
+
 module.exports = {
-    req
+    req,
+    setCookies
 }
