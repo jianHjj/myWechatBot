@@ -261,12 +261,11 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
                 let price = e ? e.first : "";
                 console.log(new Date().toLocaleString() + " 最终获取结果 [asin = " + asin + ";price = " + price + "]");
 
-                if (!price || price === '') {
+                if (!price || (price && !e.review.sellersRankSmall)) {
                     //记录失败次数
                     failureAsins.set(i, asin);
                     failureTime++;
-                    let json = JSON.stringify(failureAsins);
-                    console.log(new Date().toLocaleString() + " 当前最新失败情况 [failureAsins = " + json + ";failureTime = " + failureTime + "]");
+                    console.log(new Date().toLocaleString() + " 当前失败情况 [failureAsin = " + asin + ";failureTime = " + failureTime + "]");
                 }
             }
         }
@@ -277,7 +276,7 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
         //二次重试局部变量
         loop = 20;
         initMs = 1000;
-        let json = JSON.stringify(failureAsins);
+        let json = Array.from(failureAsins.values()).join(',');
         console.log(new Date().toLocaleString() + " 二次重试 [failureAsins = " + json + ";failureTime = " + failureTime + "]")
         let rLength: number = result.length;
         for (let i = 0; i < rLength; i++) {
@@ -679,6 +678,10 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
 
         //获取商品额外信息 Additional Information
         let table = $('#productDetails_detailBullets_sections1');
+        if (!table || table.length == 0) {
+            //持续兼容
+            table = $('#productDetails_db_sections');
+        }
         let tdArray = table.find('td');
         let thArray = table.find('th');
         var tableLength = thArray.length;

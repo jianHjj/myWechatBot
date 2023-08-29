@@ -6,8 +6,6 @@ var proxy = process.env.http_proxy || 'http://127.0.0.1:10810';
 
 let cookieMap = new Map();
 
-cookieMap.set('usa',['x-amz-captcha-1=1693294832226179; path=/; expires=Wed, 28-Aug-2024 05:40:32 GMT','x-amz-captcha-2=3lG7VePtwyRcV9OOQg48sA==; path=/; expires=Wed, 28-Aug-2024 05:40:32 GMT']);
-
 const mailer = require("../utils/emailer");
 const env = require('../utils/env');
 
@@ -47,28 +45,32 @@ function req({url, method, params, data, domain, cookies, spider = false, platfo
             .query(params)
             .proxy(proxy)
             .send(data)
-            .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36')
+            .set('Connection', 'keep-alive')
             .set('Referer', url)
             .set('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7')
             .set('Accept-Encoding', 'gzip, deflate, br')
             .set('Accept-Language', 'en,zh-CN;q=0.9,zh;q=0.8')
+            .set('Cache-Control', 'max-age=0')
             .set('Device-Memory', '8')
             .set('Dnt', '1')
-            .set('Downlink', '1.85')
-            .set('Ect', '4g')
-            .set('Rtt', '300')
-            .set('Viewport-Width', '1073')
+            .set('Downlink', '1.35')
+            .set('Dpr', '0.8')
+            .set('Ect', '3g')
+            .set('Rtt', '350')
             .set('Sec-Ch-Device-Memory', '8')
-            .set('Sec-Ch-Dpr', '1')
-            .set('Sec-Ch-Ua', 'Not/A)Brand";v="99", "Google Chrome";v="115", "Chromium";v="115')
+            .set('Sec-Ch-Dpr', '0.8')
+            .set('Sec-Ch-Ua', '"Chromium";v="116", "Not)A;Brand";v="24", "Google Chrome";v="116"')
             .set('Sec-Ch-Ua-Mobile', '?0')
             .set('Sec-Ch-Ua-Platform', 'Windows')
             .set('Sec-Ch-Ua-Platform-Version', '7.0.0')
-            .set('Sec-Ch-Viewport-Width', '1073')
+            .set('Sec-Ch-Viewport-Width', '1315')
             .set('Sec-Fetch-Dest', 'document')
             .set('Sec-Fetch-Mode', 'navigate')
             .set('Sec-Fetch-Site', 'same-origin')
             .set('Sec-Fetch-User', '?1')
+            .set('Upgrade-Insecure-Requests', '1')
+            .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36')
+            .set('Viewport-Width', '1315')
             .set('Cookie',cookie)
             .end(function (err, response) {
                 if (err) {
@@ -189,15 +191,20 @@ function checkExpire(cookieTempArray, cookieCacheArray) {
 
 /**
  * 设置cookie
- * @param domain
- * @param cookies
+ * @param domain 区域
+ * @param cookies cookies
+ * @param clear 是否清空
  */
-function setCookies({domain, cookies}) {
-    if (!cookies) {
+function setCookies({domain, cookies, clear}) {
+    if (!cookies || !domain) {
         return;
     }
 
-    cookieMap.set(domain, checkExpire(cookies, cookieMap.get(domain)));
+    if (clear) {
+        cookieMap.set(domain,'');
+    } else {
+        cookieMap.set(domain, checkExpire(cookies, cookieMap.get(domain)));
+    }
 }
 
 module.exports = {

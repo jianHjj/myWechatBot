@@ -46,6 +46,11 @@ server.pre((req: any, res: any, next: any): any => {
 });
 
 server.pre((req: any, res: any, next: any): any => {
+    //黑名单
+    if (!req.url.includes('/amazon/getPrice')) {
+        return next();
+    }
+
     if (!lock) {
         return next();
     }
@@ -168,9 +173,14 @@ server.post('/amazon/setCookies', async (req: any, res: any, next: any): Promise
     try {
         let content: string[] | undefined = req.body.content;
         let domain: string[] | undefined = req.body.domain;
+        let clear: boolean | undefined = req.body.clear;
         if (content && domain) {
             await superagent.setCookies({domain: domain, cookies: content});
             res.send("设置成功！");
+        }
+        if (clear) {
+            await superagent.setCookies({domain: domain, cookies: content, clear: clear});
+            res.send("清空成功！");
         }
     } catch (e) {
         res.send("设置失败！error=" + e);
