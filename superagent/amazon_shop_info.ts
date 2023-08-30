@@ -261,7 +261,7 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
                 let price = e ? e.first : "";
                 console.log(new Date().toLocaleString() + " 最终获取结果 [asin = " + asin + ";price = " + price + "]");
 
-                if (!price || (price && !e.review.sellersRankSmall)) {
+                if (!price) {
                     //记录失败次数
                     failureAsins.set(i, asin);
                     failureTime++;
