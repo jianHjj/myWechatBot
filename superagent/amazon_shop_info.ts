@@ -376,7 +376,9 @@ function writeInSheet(shopInfoList: ShopInfo[]): WorkSheet {
         }
         let review = item.review;
         let first = '=' + item.first;
-        columns[i] = review ? [item.country, review.asin, item.coverUrl, item.title, item.brand, first, review.sellersRankSmall, review.sellersRankBig, review.ratingsTotal, review.ratingsCount, review.ratingsReviewCount, utils.formatDateYYYYMMDD(review.createDt), item.url] : [];
+        columns[i] = review ?
+            [item.country, review.asin, item.coverUrl, item.title, item.brand, first, review.sellersRankSmall, review.sellersRankBig, review.ratingsTotal, review.ratingsCount, review.ratingsReviewCount, utils.formatDateYYYYMMDD(review.createDt), item.url]
+            : [item.country, item.asin, item.coverUrl, item.title, item.brand, first, '', '', '', '', '', utils.formatDateYYYYMMDD(item.createDt), item.url];
     }
     /* Create a simple workbook and write XLSX to buffer */
     return xlsx.utils.aoa_to_sheet(columns);
