@@ -450,6 +450,7 @@ const EURO_CHAR: string = '€';
 const RANK_DESC: string = 'Best Sellers Rank';
 /*品牌名*/
 const BRAND_NAME: string = 'Brand Name';
+const BRAND: string = 'Brand';
 /*桌子类商品的小排名*/
 const HOME_OFFICE_DESKS: string = 'Home Office Desks';
 /*花园软管卷盘小排名*/
@@ -662,6 +663,20 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
                     .text().trim();
             }
 
+            if (!brand) {
+                let bylineInfo: string = $('#bylineInfo').text().trim();
+                if (bylineInfo) {
+                    try {
+                        const [name, value] = bylineInfo.split(":");
+                        if (name && name.trim() === BRAND) {
+                            brand = value ? value.trim() : "";
+                        }
+                    } catch (e) {
+                        console.log(new Date().toLocaleString() + ' error 获取商品 brand 失败 ' + e.message + ' [asin = ' + asin + ']');
+                    }
+                }
+            }
+
             title = $('#productTitle').text().trim();
 
             //获取封面
@@ -676,6 +691,7 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
             .replace('out of 5 stars', '').trim();
         let ratingsCount: string = $('#acrCustomerReviewText').eq(0).text()
             .replace('ratings', '')
+            .replace('rating', '')
             .replace(',', '').trim();
 
         //获取商品额外信息 Additional Information
