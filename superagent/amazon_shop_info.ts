@@ -546,7 +546,16 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
                 //判断价格是否异常
                 if (charDollar) {
                     if (charDollar.length != 1) {
-                        return new ShopInfo(asin, '价格异常：价格区间', '', '', '', 0, '', '', '', '', '', url, '')
+                        //兼容第三种显示风格 list price
+                        pricesStr = $('#apex_desktop_newAccordionRow #corePrice_desktop').find('.a-spacing-small').children().children().children().find('.apexPriceToPay .a-offscreen').text()
+                        charDollar = pricesStr.replace(decimalReg, '');
+                        if (charDollar && charDollar.length != 1) {
+                            return new ShopInfo(asin, '价格异常：价格区间', '', '', '', 0, '', '', '', '', '', url, '')
+                        }
+                        if (!charDollar) {
+                            //如果不存在价格单位默认美元
+                            charDollar = '$';
+                        }
                     }
                 }
                 let priceArr: string[] = pricesStr.replace(charDollar, '').split(charDollar);
