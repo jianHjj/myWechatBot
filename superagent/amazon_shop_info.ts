@@ -89,6 +89,8 @@ export class ShopInfo {
     offsetPrice: string;
     coupon: number;
     couponUnit: string;
+    redeem: number;
+    redeemUnit: string;
     deliveryPrice: string;
     remark: string;
     createDt: Date;
@@ -123,6 +125,8 @@ export class ShopInfo {
                 brand: string,
                 url: string,
                 coverUrl: string,
+                redeem?: number,
+                redeemUnit?: string,
                 fromDB?: boolean);
 
     // 构造函数
@@ -139,6 +143,8 @@ export class ShopInfo {
                 brand?: string,
                 url?: string,
                 coverUrl?: string,
+                redeem?: number,
+                redeemUnit?: string,
                 fromDB?: boolean) {
         this.asin = asin;
         this.first = first;
@@ -155,6 +161,8 @@ export class ShopInfo {
         this.coverUrl = coverUrl;
         this.createDt = new Date();
         this.lastUpdateDt = new Date();
+        this.redeem = redeem;
+        this.redeemUnit = redeemUnit;
         if (fromDB) {
             this.fromDB = fromDB;
         }
@@ -487,14 +495,18 @@ async function reqShopInfo(asin: string, country: string): Promise<ShopInfo | un
     //特殊处理，部分地区不计算运费
     if (shopInfo && shopInfo.first != OUT_OF_STOCK) {
         //拼接微信返回信息
+        let redeemPrice: string = shopInfo.offsetPrice && shopInfo.offsetPrice !== ''
+            ? getCouponPrice(new Decimal(shopInfo.offsetPrice), new Decimal(shopInfo.redeem), shopInfo.redeemUnit)
+            : '';
+        let offsetPrice: Decimal = shopInfo.offsetPrice && redeemPrice ? new Decimal(shopInfo.offsetPrice).minus(new Decimal(redeemPrice)) : new Decimal(shopInfo.offsetPrice);
         let couponPrice: string = shopInfo.offsetPrice && shopInfo.offsetPrice !== ''
-            ? getCouponPrice(new Decimal(shopInfo.offsetPrice), new Decimal(shopInfo.coupon), shopInfo.couponUnit)
+            ? getCouponPrice(offsetPrice, new Decimal(shopInfo.coupon), shopInfo.couponUnit)
             : '';
 
         //德国 | 英国 不拼接运费
         let first: String = country == uk || country == de
-            ? concatCouponPrice(shopInfo.offsetPrice, couponPrice)
-            : concatDeliveryPrice(concatCouponPrice(shopInfo.offsetPrice, couponPrice), shopInfo.deliveryPrice);
+            ? concatCouponPrice(concatCouponPrice(shopInfo.offsetPrice, redeemPrice), couponPrice)
+            : concatDeliveryPrice(concatCouponPrice(concatCouponPrice(shopInfo.offsetPrice, redeemPrice), couponPrice), shopInfo.deliveryPrice);
         if (first) {
             shopInfo.first = first.toString();
             shopInfo.remark = first.toString();
@@ -550,7 +562,7 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
                         pricesStr = $('#apex_desktop_newAccordionRow #corePrice_desktop').find('.a-spacing-small').children().children().children().find('.apexPriceToPay .a-offscreen').text()
                         charDollar = pricesStr.replace(decimalReg, '');
                         if (charDollar && charDollar.length != 1) {
-                            return new ShopInfo(asin, '价格异常：价格区间', '', '', '', 0, '', '', '', '', '', url, '')
+                            return new ShopInfo(asin, '价格异常：价格区间', '', '', '', 0, '', '', '', '', '', url, '', 0, '')
                         }
                         if (!charDollar) {
                             //如果不存在价格单位默认美元
@@ -597,6 +609,7 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
                 couponRoot = $('#promoPriceBlockMessage_feature_div .' + couponClassName2 + '').children();
             }
             let isCoupon: string | undefined = couponRoot.attr('data-csa-c-coupon');
+            let isSavings: string | undefined = couponRoot.attr('data-csa-c-savings');
             if (isCoupon && isCoupon === 'true') {
                 //是优惠券信息
                 let complexText: string = couponRoot.find('.a-color-success').find('label').text();
@@ -632,6 +645,30 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
                     }
                 }
             }
+
+            let redeem: number;
+            let redeemUnit: string;
+            if (isSavings && isSavings === 'true') {
+                //存在补偿
+                if (couponRoot.length > 1) {
+                    let savingStr = couponRoot.eq(1).find('label').text();
+                    let limiter = '';
+                    if (savingStr.includes(charDollar)) {
+                        limiter = charDollar;
+                    } else if (savingStr.includes(CHAR_PERCENT)) {
+                        limiter = CHAR_PERCENT;
+                    }
+                    redeemUnit = limiter;
+                    let redeemMatchArr: string[] | null = savingStr.split(limiter)[0].match(new RegExp('\\b\\d*\\.?\\d\\b'));
+                    if (redeemMatchArr && redeemMatchArr.length > 0) {
+                        let redeemItem: string = redeemMatchArr[0];
+                        if (redeemItem) {
+                            redeem = parseInt(redeemItem);
+                        }
+                    }
+                }
+            }
+
 
             //避免,号问题
             basisPrice = basisPrice && basisPrice !== '' ? basisPrice.replace(',', '') : basisPrice;
@@ -692,7 +729,7 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
             let coverImgDom = $('#imgTagWrapperId');
             let coverImgUrl: string = coverImgDom.children().eq(0).attr('data-old-hires');
 
-            shopInfo = new ShopInfo(asin, '', basisPrice, offset + '', offsetPrice, coupon, couponUnit, deliveryPrice, '', title, brand, url, coverImgUrl);
+            shopInfo = new ShopInfo(asin, '', basisPrice, offset + '', offsetPrice, coupon, couponUnit, deliveryPrice, '', title, brand, url, coverImgUrl, redeem, redeemUnit);
         }
 
         //获取review信息
@@ -850,7 +887,7 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
         if (err) {
             console.log(new Date().toLocaleString() + ' error 获取商品信息出错 ' + err.message + ' [asin = ' + asin + ']');
             if (err.status && err.status === 404) {
-                return new ShopInfo(asin, '商品不存在', '', '', '', 0, '', '', '', '', '', url, '');
+                return new ShopInfo(asin, '商品不存在', '', '', '', 0, '', '', '', '', '', url, '', 0, '');
             }
         }
     }
