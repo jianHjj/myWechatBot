@@ -495,11 +495,11 @@ async function reqShopInfo(asin: string, country: string): Promise<ShopInfo | un
     //特殊处理，部分地区不计算运费
     if (shopInfo && shopInfo.first != OUT_OF_STOCK) {
         //拼接微信返回信息
-        let redeemPrice: string = shopInfo.offsetPrice && shopInfo.offsetPrice !== ''
+        let redeemPrice: string = shopInfo.offsetPrice && shopInfo.redeem
             ? getCouponPrice(new Decimal(shopInfo.offsetPrice), new Decimal(shopInfo.redeem), shopInfo.redeemUnit)
             : '';
         let offsetPrice: Decimal = shopInfo.offsetPrice && redeemPrice ? new Decimal(shopInfo.offsetPrice).minus(new Decimal(redeemPrice)) : new Decimal(shopInfo.offsetPrice);
-        let couponPrice: string = shopInfo.offsetPrice && shopInfo.offsetPrice !== ''
+        let couponPrice: string = shopInfo.offsetPrice && shopInfo.coupon
             ? getCouponPrice(offsetPrice, new Decimal(shopInfo.coupon), shopInfo.couponUnit)
             : '';
 
