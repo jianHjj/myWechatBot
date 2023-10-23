@@ -9,9 +9,11 @@ const superagent = require('../superagent/superagent');
 const server = restify.createServer();
 const env = require('../utils/env');
 const constants = require('./constants.js');
+const schedule = require('node-schedule');
 
 //设置同步锁
 let lock: boolean = false;
+let delayTaskLock: boolean = false;
 
 // 去除请求网址中的多个 /
 server.pre(restify.plugins.pre.dedupeSlashes());
@@ -53,8 +55,9 @@ server.pre((req: any, res: any, next: any): any => {
 
     if (!lock) {
         return next();
+    } else {
+        res.send(200, "系统繁忙，请稍后再试");
     }
-    res.send(200, "系统繁忙，请稍后再试");
 });
 
 server.use((req: any, res: any, next: any) => {
@@ -100,6 +103,8 @@ server.post('/amazon/getPriceByAsin', async (req: any, res: any, next: any): Pro
     try {
         let asinList: Array<string> | undefined = req.body.asin;
         let country: string | undefined = req.body.country ? req.body.country : '';
+        let delay: boolean | undefined = req.body.delay ? req.body.delay : undefined;
+
         let sendEmail: boolean | undefined = req.body.sendEmail;
         if (!asinList) {
             res.send(200, "asin不能为空，请输入asin");
@@ -107,6 +112,23 @@ server.post('/amazon/getPriceByAsin', async (req: any, res: any, next: any): Pro
             return next();
         }
         if (asinList.length > 1) {
+            if (delay) {
+                lock = false;
+                if (delayTaskLock) {
+                    res.send(200, "定时任务只能设置一个哦，别重复设置了猪猪头");
+                    return next();
+                }
+                //设置定时任务
+                delayTaskLock = true;
+                schedule.scheduleJob({tz: 'Asia/Shanghai', rule: '1 1 8 * * *'}, async () => {
+                    amazon_shop_info.getShopInfo(asinList, true, country).then((r: any) => {
+                        console.log("获取商品完毕，返回信息 ：" + r);
+                        delayTaskLock = false;
+                    });
+                });
+                res.send("设定定时任务成功！明天上午八点一分开始执行");
+                return next();
+            }
             amazon_shop_info.getShopInfo(asinList, true, country).then((r: any) => {
                 console.log("获取商品完毕，返回信息 ：" + r);
                 lock = false;
