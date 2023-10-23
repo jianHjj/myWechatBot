@@ -120,7 +120,7 @@ server.post('/amazon/getPriceByAsin', async (req: any, res: any, next: any): Pro
                 }
                 //设置定时任务
                 delayTaskLock = true;
-                schedule.scheduleJob({tz: 'Asia/Shanghai', rule: '1 1 8 * * *'}, async () => {
+                schedule.scheduleJob({tz: 'Asia/Shanghai', rule: '1 1 7 * * *'}, async () => {
                     amazon_shop_info.getShopInfo(asinList, true, country).then((r: any) => {
                         console.log("获取商品完毕，返回信息 ：" + r);
                         delayTaskLock = false;
