@@ -495,10 +495,11 @@ async function reqShopInfo(asin: string, country: string): Promise<ShopInfo | un
     //特殊处理，部分地区不计算运费
     if (shopInfo && shopInfo.first != OUT_OF_STOCK) {
         //拼接微信返回信息
-        let redeemPrice: string = shopInfo.offsetPrice && shopInfo.redeem
+        let redeemPrice: string = shopInfo.offsetPrice && shopInfo.redeem && shopInfo.redeemUnit
             ? getCouponPrice(new Decimal(shopInfo.offsetPrice), new Decimal(shopInfo.redeem), shopInfo.redeemUnit)
             : '';
-        let offsetPrice: Decimal = shopInfo.offsetPrice && redeemPrice ? new Decimal(shopInfo.offsetPrice).minus(new Decimal(redeemPrice)) : new Decimal(shopInfo.offsetPrice);
+        let offsetPrice: Decimal = shopInfo.offsetPrice && redeemPrice ? new Decimal(shopInfo.offsetPrice).minus(new Decimal(redeemPrice)) :
+            shopInfo.offsetPrice ? new Decimal(shopInfo.offsetPrice) : new Decimal(0);
         let couponPrice: string = shopInfo.offsetPrice && shopInfo.coupon
             ? getCouponPrice(offsetPrice, new Decimal(shopInfo.coupon), shopInfo.couponUnit)
             : '';
@@ -605,11 +606,11 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
             let couponUnit: string = '';
             let couponClassName2 = 'promoPriceBlockMessage_OneTimePurchase';
             let couponRoot: Cheerio<any> = $('#promoPriceBlockMessage_feature_div .promoPriceBlockMessage').children();
-            if (couponRoot.length == 0) {
+            var couponRootLength = couponRoot.length;
+            if (couponRootLength == 0) {
                 couponRoot = $('#promoPriceBlockMessage_feature_div .' + couponClassName2 + '').children();
             }
             let isCoupon: string | undefined = couponRoot.attr('data-csa-c-coupon');
-            let isSavings: string | undefined = couponRoot.attr('data-csa-c-savings');
             if (isCoupon && isCoupon === 'true') {
                 //是优惠券信息
                 let complexText: string = couponRoot.find('.a-color-success').find('label').text();
@@ -648,10 +649,13 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
 
             let redeem: number;
             let redeemUnit: string;
-            if (isSavings && isSavings === 'true') {
-                //存在补偿
-                if (couponRoot.length > 1) {
-                    let savingStr = couponRoot.eq(1).find('label').text();
+            for (let i = 0; i < couponRootLength; i++) {
+                let item = couponRoot.eq(i);
+                let savingsInner: string | undefined = item.attr('data-csa-c-savings');
+                let couponInner: string | undefined = item.attr('data-csa-c-coupon');
+                if ((couponInner && couponInner === 'false') && (savingsInner && savingsInner === 'true')) {
+                    //存在补偿
+                    let savingStr = item.find('label').text();
                     let limiter = '';
                     if (savingStr.includes(charDollar)) {
                         limiter = charDollar;
@@ -666,6 +670,7 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
                             redeem = parseInt(redeemItem);
                         }
                     }
+                    break;
                 }
             }
 
