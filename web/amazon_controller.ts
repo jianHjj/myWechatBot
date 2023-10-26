@@ -120,13 +120,14 @@ server.post('/amazon/getPriceByAsin', async (req: any, res: any, next: any): Pro
                 }
                 //设置定时任务
                 delayTaskLock = true;
-                schedule.scheduleJob({tz: 'Asia/Shanghai', rule: '1 1 7 * * *'}, async () => {
+                let now: Date = new Date();
+                schedule.scheduleJob(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 7, 1, 0), async () => {
                     amazon_shop_info.getShopInfo(asinList, true, country).then((r: any) => {
                         console.log("获取商品完毕，返回信息 ：" + r);
                         delayTaskLock = false;
                     });
                 });
-                res.send("设定定时任务成功！明天上午八点一分开始执行");
+                res.send("设定定时任务成功！明天上午七点一分开始执行");
                 return next();
             }
             amazon_shop_info.getShopInfo(asinList, true, country).then((r: any) => {
