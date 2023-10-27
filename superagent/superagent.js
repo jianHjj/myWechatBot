@@ -145,6 +145,11 @@ function checkExpire(cookieTempArray, cookieCacheArray) {
     let expire = 'Expires';
     let idx = newCookies.length;
 
+    //判断cookie是否是手动设置
+    if (cookieCacheArray.length === 1 && !cookieCacheArray[0].includes(expire)) {
+        return cookieCacheArray;
+    }
+
     //开始更新缓存
     if (cookieTempArray && cookieTempArray.length > 0) {
         for (let i = 0; i < cookieTempArray.length; i++) {
