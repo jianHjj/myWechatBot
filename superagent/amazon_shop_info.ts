@@ -2,6 +2,7 @@ import {Decimal} from "@prisma/client/runtime";
 import cheerio, {Cheerio} from 'cheerio';
 import {PrismaClient} from "@prisma/client";
 import {WorkSheet} from "xlsx";
+import {Element} from "domhandler";
 
 const superagent = require('./superagent');
 const utils = require('../utils/index');
@@ -519,6 +520,18 @@ async function reqShopInfo(asin: string, country: string): Promise<ShopInfo | un
 
 async function reqShopInfoByUrl(asin: string, url: string, domain: string): Promise<ShopInfo> {
     let shopInfo = new ShopInfo(asin);
+
+    function arrayLikeToArray(table) {
+        let tempTdArray: Cheerio<Element>[] = [], tempThArray: Cheerio<Element>[] = [];
+        for (let i = 0; i < table.find('td').length; i++) {
+            tempTdArray[i] = table.find('td').eq(i);
+        }
+        for (let i = 0; i < table.find('th').length; i++) {
+            tempThArray[i] = table.find('th').eq(i);
+        }
+        return {tempTdArray, tempThArray};
+    }
+
     try {
         //请求amazon
         let res = await superagent.req({url: url, method: 'GET', domain: domain, spider: true});
@@ -747,21 +760,34 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
 
         //获取商品额外信息 Additional Information
         let table = $('#productDetails_detailBullets_sections1');
+        let table2;
         if (!table || table.length == 0) {
             //持续兼容
             table = $('#productDetails_db_sections');
+            if (!table || table.length == 0) {
+                //持续兼容
+                table = $('#productDetails_expanderTables_depthRightSections');
+                table2 = $('#productDetails_expanderTables_depthLeftSections');
+            }
         }
-        let tdArray = table.find('td');
-        let thArray = table.find('th');
+
+        let {tempTdArray, tempThArray} = arrayLikeToArray(table);
+        let tdArray: Cheerio<Element>[] = tempTdArray;
+        let thArray: Cheerio<Element>[] = tempThArray;
+        if (table2 && table2.length > 0) {
+            let {tempTdArray, tempThArray} = arrayLikeToArray(table2);
+            tdArray = Array.prototype.concat(tdArray, tempTdArray);
+            thArray = Array.prototype.concat(thArray, tempThArray);
+        }
         var tableLength = thArray.length;
         let topBig = "";
         let topSmall = "";
         for (let i = 0; i < tableLength; i++) {
-            let th: string = thArray.eq(i).text();
+            let th: string = thArray[i].text();
             if (th.includes(RANK_DESC)) {
                 //从商品详情中抽取排名
                 let topList: string[] = [];
-                let spanArray = tdArray.eq(i).find('span').find('span');
+                let spanArray = tdArray[i].find('span').find('span');
                 for (let j = 0; j < spanArray.length; j++) {
                     topList[j] = spanArray.eq(j).text().replace(/(,)/g, '').replace('#', '').trim();
                 }
@@ -823,7 +849,7 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
 
             //如果商品信息存在 从table列表中二次匹配asin
             if (th.includes(ASIN)) {
-                let asin_code: string = tdArray.eq(i).text().trim();
+                let asin_code: string = tdArray[i].text().trim();
                 if (asin !== asin_code) {
                     shopInfo.first = OUT_OF_STOCK;
                     shopInfo.remark = shopInfo.first;
