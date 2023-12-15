@@ -623,42 +623,6 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
             if (couponRootLength == 0) {
                 couponRoot = $('#promoPriceBlockMessage_feature_div .' + couponClassName2 + '').children();
             }
-            let isCoupon: string | undefined = couponRoot.attr('data-csa-c-coupon');
-            if (isCoupon && isCoupon === 'true') {
-                //是优惠券信息
-                let complexText: string = couponRoot.find('.a-color-success').find('label').text();
-
-                if (EURO_CHAR === charDollar || complexText === '') {
-                    //兼容欧元区优惠券H5
-                    complexText = couponRoot.find('label').text();
-                }
-
-                //开始匹配优惠券价格
-                //优惠券存在两种单位
-                if (complexText.includes(charDollar)) {
-                    //货币符号
-                    couponUnit = charDollar;
-                    let couponMatchArr: string[] | null = complexText.split(charDollar)[1]
-                        .match(new RegExp('\\b\\d*\\.?\\d\\b'));
-                    if (couponMatchArr && couponMatchArr.length > 0) {
-                        let couponItem: string = couponMatchArr[0];
-                        if (couponItem) {
-                            coupon = parseInt(couponItem);
-                        }
-                    }
-                } else if (complexText.includes(CHAR_PERCENT)) {
-                    //百分比
-                    couponUnit = CHAR_PERCENT;
-                    let couponMatchArr: string[] | null = complexText.split(CHAR_PERCENT)[0]
-                        .match(new RegExp('\\b\\d*\\.?\\d\\b'));
-                    if (couponMatchArr && couponMatchArr.length > 0) {
-                        let pcItem: string = couponMatchArr[0];
-                        if (pcItem) {
-                            coupon = parseInt(pcItem);
-                        }
-                    }
-                }
-            }
 
             let redeem: number;
             let redeemUnit: string;
@@ -666,9 +630,54 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
                 let item = couponRoot.eq(i);
                 let savingsInner: string | undefined = item.attr('data-csa-c-savings');
                 let couponInner: string | undefined = item.attr('data-csa-c-coupon');
-                if ((couponInner && couponInner === 'false') && (savingsInner && savingsInner === 'true')) {
+
+                if ((!coupon || coupon === 0 )
+                    && (couponInner && couponInner === 'true')
+                    && (savingsInner && savingsInner === 'true')) {
+                    //是优惠券信息
+                    let complexText: string = couponRoot.find('.a-color-success').find('label').text();
+
+                    if (EURO_CHAR === charDollar || complexText === '') {
+                        //兼容欧元区优惠券H5
+                        complexText = couponRoot.find('label').text();
+                    }
+
+                    //开始匹配优惠券价格
+                    //优惠券存在两种单位
+                    if (complexText.includes(charDollar)) {
+                        //货币符号
+                        couponUnit = charDollar;
+                        let couponMatchArr: string[] | null = complexText.split(charDollar)[1]
+                            .match(new RegExp('\\b\\d*\\.?\\d\\b'));
+                        if (couponMatchArr && couponMatchArr.length > 0) {
+                            let couponItem: string = couponMatchArr[0];
+                            if (couponItem) {
+                                coupon = parseInt(couponItem);
+                            }
+                        }
+                    } else if (complexText.includes(CHAR_PERCENT)) {
+                        //百分比
+                        couponUnit = CHAR_PERCENT;
+                        let couponMatchArr: string[] | null = complexText.split(CHAR_PERCENT)[0]
+                            .match(new RegExp('\\b\\d*\\.?\\d\\b'));
+                        if (couponMatchArr && couponMatchArr.length > 0) {
+                            let pcItem: string = couponMatchArr[0];
+                            if (pcItem) {
+                                coupon = parseInt(pcItem);
+                            }
+                        }
+                    }
+                }
+
+                if (!redeem
+                    && (couponInner && couponInner === 'false')
+                    && (savingsInner && savingsInner === 'true')) {
                     //存在补偿
                     let savingStr = item.find('label').text();
+                    if (!savingStr) {
+                        //兼容模式
+                        savingStr = item.find('.a-alert-content').text();
+                    }
                     let limiter = '';
                     if (savingStr.includes(charDollar)) {
                         limiter = charDollar;
@@ -683,7 +692,6 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
                             redeem = parseInt(redeemItem);
                         }
                     }
-                    break;
                 }
             }
 
