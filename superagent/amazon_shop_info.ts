@@ -40,15 +40,15 @@ const canada_url: ShopUrl = {
  * 德国站URL
  */
 const de_url: ShopUrl = {
-    url_shop_info: 'https://www.amazon.de/-/en/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/dp/{ASIN}/ref=cm_cr_arp_d_product_top?ie=UTF8&deliveryCountryCode=DE',
-    url_shop_review: 'https://www.amazon.de/-/en/product-reviews/{ASIN}/ref=cm_cr_arp_d_show_all?ie=UTF8&reviewerType=all_reviews&deliveryCountryCode=DE#reviews-filter-bar'
+    url_shop_info: 'https://www.amazon.de/-/en/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/dp/{ASIN}/ref=cm_cr_arp_d_product_top?ie=UTF8&dib=eyJ2IjoiMSJ9.75GcUimje-Vjo5hFsc-XRssZ44msbSOyMlstuVt4s8vGjHj071QN20LucGBJIEps.38DaiYwnBvmrYVV6PwiKRQKInRVcvlZdeKTHRcNes-E&dib_tag=se&qid=1716898189&sr=8-1&th=1',
+    url_shop_review: 'https://www.amazon.de/-/en/product-reviews/{ASIN}/ref=cm_cr_arp_d_show_all?ie=UTF8&dib=eyJ2IjoiMSJ9.75GcUimje-Vjo5hFsc-XRssZ44msbSOyMlstuVt4s8vGjHj071QN20LucGBJIEps.38DaiYwnBvmrYVV6PwiKRQKInRVcvlZdeKTHRcNes-E&dib_tag=se&qid=1716898189&sr=8-1&th=1'
 }
 
 /**
  * 英国站URL
  */
 const uk_url: ShopUrl = {
-    url_shop_info: 'https://www.amazon.co.uk/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/dp/{ASIN}/ref=cm_cr_arp_d_product_top?ie=UTF8&deliveryCountryCode=GB',
+    url_shop_info: 'https://www.amazon.co.uk/Computer-Desk-inches-Writing-Frame%EF%BC%8CBrown/dp/{ASIN}/ref=cm_cr_arp_d_product_top?ie=UTF8&deliveryCountryCode=GBP',
     url_shop_review: 'https://www.amazon.co.uk/product-reviews/{ASIN}/ref=cm_cr_dp_d_show_all_btm?ie=UTF8&reviewerType=all_reviews&deliveryCountryCode=GB#reviews-filter-bar'
 }
 
