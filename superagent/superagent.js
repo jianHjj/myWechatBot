@@ -2,7 +2,19 @@ const superagent = require('superagent')
 
 require('superagent-proxy')(superagent)
 
-var proxy = process.env.http_proxy || 'http://127.0.0.1:10810';
+let https = require('https');
+
+let proxy = process.env.http_proxy || 'http://127.0.0.1:10810';
+
+const options = {
+    keepAlive: true,
+    keepAliveMsecs: 1000,
+    maxSockets: 60,
+    maxFreeSockets: 30,
+    totalSocketCount: 60
+}
+
+const agent = new https.Agent(options);
 
 let cookieMap = new Map();
 
@@ -34,6 +46,14 @@ let sendDt;
  * @returns {Promise}
  */
 function req({url, method, params, data, domain, cookies, spider = false, platform = 'tx'}) {
+    let splitUrl = url.split('/');
+    let urlDomain;
+    if(splitUrl[2]) {
+        urlDomain = splitUrl[2];
+    } else {
+        urlDomain = ''; //如果url不正确就取空
+
+    }
     let cookieTemp = cookieMap.get(domain);
     let cookie = cookieTemp && cookieTemp !== '' ? cookieTemp : '';
     return new Promise(function (resolve, reject) {
@@ -43,10 +63,11 @@ function req({url, method, params, data, domain, cookies, spider = false, platfo
               deadline: 60000, // but allow 1 minute for the file to finish loading.
             })
             .query(params)
+            .agent(agent)
             .proxy(proxy)
             .send(data)
             .set('Connection', 'keep-alive')
-            .set('Origin', "https://www.amazon.com")
+            .set('Origin', "https://" + urlDomain)
             .set('Referer', url)
             .set('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7')
             .set('Accept-Encoding', 'gzip, deflate, br, zstd')
