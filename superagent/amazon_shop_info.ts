@@ -326,7 +326,9 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
         let time: number = 1;
         let delayMs: number = initMs;
         while ((!e || !e.first
-            || (e.first && (!e.review.sellersRankSmall || !e.review.ratingsReviewCount)))
+            || (e.first && e.first === '价格异常：价格区间')
+            || (e.first && e.first === '商品不存在')
+            || (e.first && e.review && (!e.review.sellersRankSmall || !e.review.ratingsReviewCount)))
         && time <= loop) {
             //如果没查到重试
             let emptyPrice = !e || !e.first || e.first === '';
@@ -573,8 +575,10 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
                 if (charDollar) {
                     if (charDollar.length != 1) {
                         //兼容第三种显示风格 list price
-                        pricesStr = $('#apex_desktop_newAccordionRow #corePrice_desktop').find('.a-spacing-small').children().children().children().find('.apexPriceToPay .a-offscreen').text()
-                        charDollar = pricesStr.replace(decimalReg, '');
+                        if (!pricesStr) {
+                            pricesStr = $('#apex_desktop_newAccordionRow #corePrice_desktop').find('.a-spacing-small').children().children().children().find('.apexPriceToPay .a-offscreen').text()
+                            charDollar = pricesStr.replace(decimalReg, '');
+                        }
                         if (charDollar && charDollar.length != 1) {
                             return new ShopInfo(asin, '价格异常：价格区间', '', '', '', 0, '', '', '', '', '', url, '', 0, '')
                         }
