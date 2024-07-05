@@ -561,10 +561,13 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
 
             //fix 部分价格结构不同
             if (!offsetPrice || offsetPrice === '') {
-                if (UK_CHAR === charDollar || EURO_CHAR === charDollar) {
+                if (UK_CHAR === charDollar) {
                     offsetPrice = price.find('.a-spacing-none .aok-offscreen').text()
                         .replace(/(^\s*)|(\s*$)/g, '').replace(charDollar, '');
-                }else {
+                } else if (EURO_CHAR === charDollar) {
+                    offsetPrice = price.find('.a-spacing-none .aok-offscreen').eq(0).text()
+                        .replace(/(^\s*)|(\s*$)/g, '').replace(charDollar, '');
+                } else {
                     offsetPrice = price.find('.a-spacing-none .priceToPay').eq(0).children().eq(1).text()
                         .replace(/(^\s*)|(\s*$)/g, '').replace(charDollar, '');
                 }
