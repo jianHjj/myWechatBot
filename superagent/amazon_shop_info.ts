@@ -455,6 +455,8 @@ async function sendEmail(shopInfoList: ShopInfo[] | undefined[]): Promise<void> 
 const CHAR_PERCENT: string = '%';
 /*欧元符号*/
 const EURO_CHAR: string = '€';
+/*英镑符号*/
+const UK_CHAR: string = '£';
 
 //table key
 /*排名 talbe->th 内容*/
@@ -559,8 +561,13 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
 
             //fix 部分价格结构不同
             if (!offsetPrice || offsetPrice === '') {
-                offsetPrice = price.find('.a-spacing-none .priceToPay').eq(0).children().eq(1).text()
-                    .replace(/(^\s*)|(\s*$)/g, '').replace(charDollar, '');
+                if (UK_CHAR === charDollar) {
+                    offsetPrice = price.find('.a-spacing-none .aok-offscreen').text()
+                        .replace(/(^\s*)|(\s*$)/g, '').replace(charDollar, '');
+                }else {
+                    offsetPrice = price.find('.a-spacing-none .priceToPay').eq(0).children().eq(1).text()
+                        .replace(/(^\s*)|(\s*$)/g, '').replace(charDollar, '');
+                }
             }
 
             let basisPrice = '';
