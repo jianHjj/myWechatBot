@@ -561,7 +561,7 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
 
             //fix 部分价格结构不同
             if (!offsetPrice || offsetPrice === '') {
-                if (UK_CHAR === charDollar) {
+                if (UK_CHAR === charDollar || EURO_CHAR === charDollar) {
                     offsetPrice = price.find('.a-spacing-none .aok-offscreen').text()
                         .replace(/(^\s*)|(\s*$)/g, '').replace(charDollar, '');
                 }else {
