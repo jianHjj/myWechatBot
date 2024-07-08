@@ -563,10 +563,11 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
             if (!offsetPrice || offsetPrice === '') {
                 let euroPriceList = price.find('.a-spacing-none .aok-offscreen');
                 let euroPrice = euroPriceList.length > 1 ? euroPriceList.eq(0) : euroPriceList;
-                if (UK_CHAR === charDollar) {
-                    offsetPrice = euroPrice.text().replace(/(^\s*)|(\s*$)/g, '').replace(charDollar, '');
-                } else if (EURO_CHAR === charDollar) {
-                    offsetPrice = euroPrice.text().replace(/(^\s*)|(\s*$)/g, '').replace(charDollar, '');
+                if (UK_CHAR === charDollar || EURO_CHAR === charDollar) {
+                    let matchPriceList = euroPrice.text().replace(/(^\s*)|(\s*$)/g, '').replace(charDollar, '').match(decimalReg);
+                    if (matchPriceList && matchPriceList.length > 0) {
+                        offsetPrice = matchPriceList[0];
+                    }
                 } else {
                     offsetPrice = price.find('.a-spacing-none .priceToPay').eq(0).children().eq(1).text()
                         .replace(/(^\s*)|(\s*$)/g, '').replace(charDollar, '');
