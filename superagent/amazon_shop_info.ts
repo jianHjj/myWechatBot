@@ -77,6 +77,9 @@ const chineseReg: RegExp = new RegExp('^[\u4E00-\u9FFF]+');
 
 const decimalReg = new RegExp('([1-9]\\d*\\.?\\d*)|(0\\.\\d*[1-9])');
 
+//包含这个值代表无库存
+const currentUnavailable = "unavailable";
+
 
 // 延时函数，防止检测出类似机器人行为操作
 const delay = (ms: any) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -326,8 +329,7 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
         let time: number = 1;
         let delayMs: number = initMs;
         while ((!e || !e.first
-            || (e.first && e.first === '价格异常：价格区间')
-            || (e.first && e.first === '商品不存在')
+            || (e.first && !(e.first === '价格异常：价格区间' || e.first === '商品不存在' || e.first === '无库存'))
             || (e.first && e.review && (!e.review.sellersRankSmall || !e.review.ratingsReviewCount)))
         && time <= loop) {
             //如果没查到重试
@@ -597,6 +599,12 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
                             //如果不存在价格单位默认美元
                             charDollar = '$';
                         }
+                    }
+                } else {
+                    //判断是否无库存的情况
+                    let available = $('#availability').find('.a-color-success').text();
+                    if (available && available.includes(currentUnavailable)) {
+                        return new ShopInfo(asin, '无库存', '', '', '', 0, '', '', '', '', '', url, '', 0, '');
                     }
                 }
                 let priceArr: string[] = pricesStr.replace(charDollar, '').split(charDollar);
