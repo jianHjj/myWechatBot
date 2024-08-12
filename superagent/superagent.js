@@ -8,13 +8,14 @@ let proxy = process.env.http_proxy || 'http://127.0.0.1:10810';
 
 const options = {
     keepAlive: true,
-    keepAliveMsecs: 1000,
-    maxSockets: 60,
-    maxFreeSockets: 30,
-    totalSocketCount: 60
+    keepAliveMsecs: 6000,
+    // maxSockets: 60,
+    // maxFreeSockets: 30,
+    // totalSocketCount: 60
 }
 
-const agent = new https.Agent(options);
+//https 代理对象缓存
+let httpsAgentMap = new Map();
 
 let cookieMap = new Map();
 
@@ -54,17 +55,28 @@ function req({url, method, params, data, domain, cookies, spider = false, platfo
         urlDomain = ''; //如果url不正确就取空
 
     }
+
+    //https 获取代理对象
+    let agent = httpsAgentMap.get(domain);
+    if (!agent) {
+        agent = superagent.agent(new https.Agent(options));
+        httpsAgentMap.set(domain, agent);
+    }
+
     let cookieTemp = cookieMap.get(domain);
     let cookie = cookieTemp && cookieTemp !== '' ? cookieTemp : '';
     return new Promise(function (resolve, reject) {
-        superagent(method, url)
+        agent
+            // .method(method)
+            .get(url)
             .timeout({
               response: 6000,  // Wait 6 seconds for the server to start sending,
               deadline: 60000, // but allow 1 minute for the file to finish loading.
             })
             .query(params)
-            .agent(agent)
+            // .agent(agent)
             .proxy(proxy)
+            .retry(3)
             .send(data)
             .set('Connection', 'keep-alive')
             .set('Origin', "https://" + urlDomain)
@@ -94,7 +106,7 @@ function req({url, method, params, data, domain, cookies, spider = false, platfo
             .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36')
             .set('Viewport-Width', '1035')
             .set('Priority', 'u=0, i')
-            .set('Cookie',cookie)
+            // .set('Cookie',cookie)
             .end(function (err, response) {
                 if (err) {
                     reject(err)
