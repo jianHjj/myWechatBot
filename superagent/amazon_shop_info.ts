@@ -328,8 +328,12 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
         let e = result[i];
         let time: number = 1;
         let delayMs: number = initMs;
+        if (e.first === '价格异常：价格区间' || e.first === '商品不存在' || e.first === '无库存') {
+            //特殊情况不重试
+            return;
+        }
+
         while ((!e || !e.first
-            || (e.first && !(e.first === '价格异常：价格区间' || e.first === '商品不存在' || e.first === '无库存'))
             || (e.first && e.review && (!e.review.sellersRankSmall || !e.review.ratingsReviewCount)))
         && time <= loop) {
             //如果没查到重试
