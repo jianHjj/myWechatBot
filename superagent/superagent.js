@@ -74,7 +74,7 @@ function req({url, method, params, data, domain, cookies, spider = false, platfo
               deadline: 60000, // but allow 1 minute for the file to finish loading.
             })
             .query(params)
-            // .agent(agent)
+            .agent(agent)
             .proxy(proxy)
             .retry(3)
             .send(data)
@@ -106,7 +106,7 @@ function req({url, method, params, data, domain, cookies, spider = false, platfo
             .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36')
             .set('Viewport-Width', '1035')
             .set('Priority', 'u=0, i')
-            // .set('Cookie',cookie)
+            .set('Cookie',cookie)
             .end(function (err, response) {
                 if (err) {
                     reject(err)
