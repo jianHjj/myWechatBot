@@ -646,7 +646,7 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
             let couponUnit: string = '';
             let couponClassName2 = 'promoPriceBlockMessage_OneTimePurchase';
             let couponRoot: Cheerio<any> = $('#promoPriceBlockMessage_feature_div .promoPriceBlockMessage').children();
-            var couponRootLength = couponRoot.length;
+            let couponRootLength = couponRoot.length;
             if (couponRootLength == 0) {
                 couponRoot = $('#promoPriceBlockMessage_feature_div .' + couponClassName2 + '').children();
             }
@@ -654,72 +654,68 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
             let redeem: number;
             let redeemUnit: string;
             for (let i = 0; i < couponRootLength; i++) {
-                let item = couponRoot.eq(i);
-                let savingsInner: string | undefined = item.attr('data-csa-c-savings');
-                let couponInner: string | undefined = item.attr('data-csa-c-coupon');
+                let item = couponRoot.eq(i).children();
 
-                if ((!coupon || coupon === 0 )
-                    && (couponInner && couponInner === 'true')
-                    && (savingsInner && savingsInner === 'true')) {
-                    //是优惠券信息
+                if ((!coupon || coupon === 0 )) {
                     let complexText: string = couponRoot.find('.a-color-success').find('label').text();
 
-                    if (EURO_CHAR === charDollar || complexText === '') {
-                        //兼容欧元区优惠券H5
-                        complexText = couponRoot.find('label').text();
-                    }
-
-                    //开始匹配优惠券价格
-                    //优惠券存在两种单位
-                    if (complexText.includes(charDollar)) {
-                        //货币符号
-                        couponUnit = charDollar;
-                        let couponMatchArr: string[] | null = complexText.split(charDollar)[1]
-                            .match(new RegExp('\\b\\d*\\.?\\d\\b'));
-                        if (couponMatchArr && couponMatchArr.length > 0) {
-                            let couponItem: string = couponMatchArr[0];
-                            if (couponItem) {
-                                coupon = parseInt(couponItem);
-                            }
+                    //是优惠券信息
+                    if (complexText && complexText.includes('coupon')) {
+                        if (EURO_CHAR === charDollar || complexText === '') {
+                            //兼容欧元区优惠券H5
+                            complexText = couponRoot.find('label').text();
                         }
-                    } else if (complexText.includes(CHAR_PERCENT)) {
-                        //百分比
-                        couponUnit = CHAR_PERCENT;
-                        let couponMatchArr: string[] | null = complexText.split(CHAR_PERCENT)[0]
-                            .match(new RegExp('\\b\\d*\\.?\\d\\b'));
-                        if (couponMatchArr && couponMatchArr.length > 0) {
-                            let pcItem: string = couponMatchArr[0];
-                            if (pcItem) {
-                                coupon = parseInt(pcItem);
+
+                        //开始匹配优惠券价格
+                        //优惠券存在两种单位
+                        if (complexText.includes(charDollar)) {
+                            //货币符号
+                            couponUnit = charDollar;
+                            let couponMatchArr: string[] | null = complexText.split(charDollar)[1]
+                                .match(new RegExp('\\b\\d*\\.?\\d\\b'));
+                            if (couponMatchArr && couponMatchArr.length > 0) {
+                                let couponItem: string = couponMatchArr[0];
+                                if (couponItem) {
+                                    coupon = parseInt(couponItem);
+                                }
+                            }
+                        } else if (complexText.includes(CHAR_PERCENT)) {
+                            //百分比
+                            couponUnit = CHAR_PERCENT;
+                            let couponMatchArr: string[] | null = complexText.split(CHAR_PERCENT)[0]
+                                .match(new RegExp('\\b\\d*\\.?\\d\\b'));
+                            if (couponMatchArr && couponMatchArr.length > 0) {
+                                let pcItem: string = couponMatchArr[0];
+                                if (pcItem) {
+                                    coupon = parseInt(pcItem);
+                                }
                             }
                         }
                     }
                 }
 
-                if (!redeem
-                    && (couponInner && couponInner === 'false')
-                    && (savingsInner && savingsInner === 'true')) {
-                    //存在补偿
-                    let savingStr = item.find('label').text();
-                    if (!savingStr) {
-                        //兼容模式
-                        savingStr = item.find('.a-alert-content').text();
-                    }
-                    let limiter = '';
-                    if (savingStr.includes(charDollar)) {
-                        limiter = charDollar;
-                    } else if (savingStr.includes(CHAR_PERCENT)) {
-                        limiter = CHAR_PERCENT;
-                    }
-                    redeemUnit = limiter;
-                    let redeemMatchArr: string[] | null = savingStr.split(limiter)[0].match(new RegExp('\\b\\d*\\.?\\d\\b'));
-                    if (redeemMatchArr && redeemMatchArr.length > 0) {
-                        let redeemItem: string = redeemMatchArr[0];
-                        if (redeemItem) {
-                            redeem = parseInt(redeemItem);
-                        }
-                    }
-                }
+                // if (!redeem) {
+                //     //存在补偿
+                //     let savingStr = item.find('label').text();
+                //     if (!savingStr) {
+                //         //兼容模式
+                //         savingStr = item.find('.a-alert-content').text();
+                //     }
+                //     let limiter = '';
+                //     if (savingStr.includes(charDollar)) {
+                //         limiter = charDollar;
+                //     } else if (savingStr.includes(CHAR_PERCENT)) {
+                //         limiter = CHAR_PERCENT;
+                //     }
+                //     redeemUnit = limiter;
+                //     let redeemMatchArr: string[] | null = savingStr.split(limiter)[0].match(new RegExp('\\b\\d*\\.?\\d\\b'));
+                //     if (redeemMatchArr && redeemMatchArr.length > 0) {
+                //         let redeemItem: string = redeemMatchArr[0];
+                //         if (redeemItem) {
+                //             redeem = parseInt(redeemItem);
+                //         }
+                //     }
+                // }
             }
 
 
