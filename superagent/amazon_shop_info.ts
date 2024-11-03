@@ -658,6 +658,9 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
 
                 if ((!coupon || coupon === 0 )) {
                     let complexText: string = couponRoot.find('.a-color-success').find('label').text();
+                    if (!complexText) {
+                        complexText = couponRoot.find('.a-color-success').text();
+                    }
 
                     //是优惠券信息
                     if (complexText && complexText.includes('coupon')) {
