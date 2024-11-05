@@ -233,7 +233,7 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
 
     //局部常量
     var length = asinList.length;
-    let factor: number = 0.1;
+    let factor: number = 1.5;
     let initMs: number = 40 * 1000;
     let maxMs: number = 60 * 1000;
     let minMs: number = 2 * 1000;
@@ -286,8 +286,8 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
     //是否有失败的asin
     if (failureAsins.size > 0 && failureTime > 0) {
         //二次重试局部变量
-        loop = 20;
-        initMs = 1000;
+        loop = 5;
+        initMs = 2000;
         let json = Array.from(failureAsins.values()).join(',');
         console.log(new Date().toLocaleString() + " 二次重试 [failureAsins = " + json + ";failureTime = " + failureTime + "]")
         let rLength: number = result.length;
@@ -333,9 +333,7 @@ export async function getShopInfo(asinList: any[], se: boolean, country: string)
             return;
         }
 
-        while ((!e || !e.first
-            || (e.first && e.review && (!e.review.sellersRankSmall || !e.review.ratingsReviewCount)))
-        && time <= loop) {
+        while ((!e || !e.first) && time <= loop) {
             //如果没查到重试
             let emptyPrice = !e || !e.first || e.first === '';
             let price = e ? e.first : "";
@@ -946,7 +944,13 @@ async function reqShopInfoByUrl(asin: string, url: string, domain: string): Prom
 
         //商品review
         await delay(2000);
-        shopInfo.review = await reqShopReview(asin, domain, new ShopReviewInfo(asin, topBig, topSmall, ratingsTotal, ratingsCount, ''))
+        try {
+            shopInfo.review = await reqShopReview(asin, domain, new ShopReviewInfo(asin, topBig, topSmall, ratingsTotal, ratingsCount, ''))
+        }catch (error){
+            if (error) {
+                console.log(new Date().toLocaleString() + ' error 获取review出错 ' + error.message + ' [asin = ' + asin + ']');
+            }
+        }
         return shopInfo;
     } catch (err) {
         if (err) {

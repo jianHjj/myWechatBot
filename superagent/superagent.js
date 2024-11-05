@@ -57,24 +57,24 @@ function req({url, method, params, data, domain, cookies, spider = false, platfo
     }
 
     //https 获取代理对象
-    let agent = httpsAgentMap.get(domain);
-    if (!agent) {
-        agent = superagent.agent(new https.Agent(options));
-        httpsAgentMap.set(domain, agent);
-    }
+    // let agent = httpsAgentMap.get(domain);
+    // if (!agent) {
+    //     agent = superagent.agent(new https.Agent(options));
+    //     httpsAgentMap.set(domain, agent);
+    // }
 
     let cookieTemp = cookieMap.get(domain);
     let cookie = cookieTemp && cookieTemp !== '' ? cookieTemp : '';
     return new Promise(function (resolve, reject) {
-        agent
+        superagent(method,url)
             // .method(method)
-            .get(url)
+            // .get(url)
             .timeout({
               response: 6000,  // Wait 6 seconds for the server to start sending,
               deadline: 60000, // but allow 1 minute for the file to finish loading.
             })
             .query(params)
-            .agent(agent)
+            // .agent(agent)
             .proxy(proxy)
             .retry(3)
             .send(data)
@@ -83,28 +83,28 @@ function req({url, method, params, data, domain, cookies, spider = false, platfo
             .set('Referer', url)
             .set('Accept', 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7')
             .set('Accept-Encoding', 'gzip, deflate, br, zstd')
-            .set('Accept-Language', 'en-US,en;q=0.9')
+            .set('Accept-Language', 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7')
             .set('Cache-Control', 'max-age=0')
             .set('Device-Memory', '8')
             .set('Dnt', '1')
-            .set('Downlink', '1.5')
+            .set('Downlink', '2.65')
             .set('Dpr', '1')
-            .set('Ect', '3g')
-            .set('Rtt', '350')
+            .set('Ect', '4g')
+            .set('Rtt', '250')
             .set('Sec-Ch-Device-Memory', '8')
-            .set('Sec-Ch-Dpr', '0.9')
-            .set('Sec-Ch-Ua', '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"')
+            .set('Sec-Ch-Dpr', '1')
+            .set('Sec-Ch-Ua', '"Chromium";v="130", "Google Chrome";v="130", "Not?A_Brand";v="99"')
             .set('Sec-Ch-Ua-Mobile', '?0')
             .set('Sec-Ch-Ua-Platform', 'Windows')
-            .set('Sec-Ch-Ua-Platform-Version', '7.0.0')
-            .set('Sec-Ch-Viewport-Width', '1035')
+            .set('Sec-Ch-Ua-Platform-Version', '"15.0.0"')
+            .set('Sec-Ch-Viewport-Width', '772')
             .set('Sec-Fetch-Dest', 'document')
             .set('Sec-Fetch-Mode', 'navigate')
             .set('Sec-Fetch-Site', 'same-origin')
             .set('Sec-Fetch-User', '?1')
             .set('Upgrade-Insecure-Requests', '1')
-            .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36')
-            .set('Viewport-Width', '1035')
+            .set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36')
+            .set('Viewport-Width', '772')
             .set('Priority', 'u=0, i')
             .set('Cookie',cookie)
             .end(function (err, response) {
