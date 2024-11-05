@@ -131,15 +131,15 @@ function req({url, method, params, data, domain, cookies, spider = false, platfo
                         }
 
                         //获取cookie
-                        let cookieTemp = response.headers["set-cookie"];
-                        let cookieCache = cookieMap.get(domain);
-                        cookieMap.set(domain, checkExpire(cookieTemp,cookieCache));
+                        // let cookieTemp = response.headers["set-cookie"];
+                        // let cookieCache = cookieMap.get(domain);
+                        // cookieMap.set(domain, checkExpire(cookieTemp,cookieCache));
 
                         //防止设置失败，避免直接set undefined
-                        cookieCache = cookieMap.get(domain);
-                        if (!cookieCache) {
-                            cookieMap.set(domain, '');
-                        }
+                        // cookieCache = cookieMap.get(domain);
+                        // if (!cookieCache) {
+                        //     cookieMap.set(domain, '');
+                        // }
                     }
                 } else { // 如果是非爬虫，返回格式化后的内容
                     const res = JSON.parse(response.text);
